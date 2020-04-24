@@ -1,0 +1,40 @@
+@_ECHO_OFF
+DEMO_HOME=`pwd`
+DEMO_FILES=${DEMO_HOME}/demos/jib
+DEMO_TEMP=${DEMO_HOME}/temp/jib
+source ${DEMO_HOME}/demos/aliases.sh
+rm -rf ${DEMO_TEMP}
+mkdir -p ${DEMO_TEMP}
+cd ${DEMO_TEMP}
+export DOCKER_BUILDKIT=0
+dclean
+# Set up
+git clone git@github.com:ciberkleid/cool-app
+cd cool-app
+clear
+@_ECHO_ON
+cat ~/.m2/settings.xml | grep -v password
+export IMAGE_PATH=registry.hub.docker.com/ciberkleid/cool-app
+./mvnw compile com.google.cloud.tools:jib-maven-plugin:2.1.0:build -Dimage=$IMAGE_PATH
+open https://hub.docker.com/r/ciberkleid/cool-app/tags
+docker images
+cat pom.xml # plugin dependency
+export IMAGE_PATH=registry.hub.docker.com/ciberkleid
+./mvnw compile jib:build
+./mvnw compile jib:dockerBuild
+docker images
+cat pom.xml # jib profile config
+./mvnw package -P jib
+cat target/jib-image.digest
+cat target/jib-image.id
+cat pom.xml # debug profile config
+./mvnw package -P jib-debug
+docker images
+docker run -it --entrypoint /busybox/sh debug/cool-app
+./mvnw clean package -Djib.to.tags.tag=latest
+
+#### Get more examples:
+# https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin#extended-usage
+
+# Show layers? Change code?
+

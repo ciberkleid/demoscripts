@@ -1,0 +1,8 @@
+# Simple example, requires pre-built binary
+# Set binary as entrypoint with default arguments
+
+FROM scratch
+COPY hello /
+ENTRYPOINT ["/hello"]
+CMD ["world"]
+

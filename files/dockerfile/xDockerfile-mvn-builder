@@ -1,0 +1,50 @@
+FROM openjdk:8-jdk-alpine
+##### select and freeze JDK version: OpenJDK 8 and Linux Alpine
+# ----
+# Install Maven
+##### Install Maven
+      #Speed up Maven JVM a bit: MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1", read the following post
+      #RUN mkdir -p ... curl ... tar ... – download and install (untar and ln -s) Apache Maven
+      #ARG ... – Use build arguments to allow overriding Maven version and local repository location (MAVEN_VERSION and USER_HOME_DIR) with docker build --build-arg ...
+RUN apk add --no-cache curl tar bash
+ARG MAVEN_VERSION=3.3.9
+ARG USER_HOME_DIR="/root"
+RUN mkdir -p /usr/share/maven && \
+curl -fsSL http://apache.osuosl.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar -xzC /usr/share/maven --strip-components=1 && \
+ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+ENV MAVEN_HOME /usr/share/maven
+ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+# speed up Maven JVM a bit
+ENV MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+ENTRYPOINT ["/usr/bin/mvn"]
+# ----
+# Install project dependencies and keep sources
+# make source folder
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+# install maven dependency packages (keep in image)
+COPY pom.xml /usr/src/app
+##### RUN mvn -T 1C install && rm -rf target – download project dependencies:
+      #Copy project pom.xml file, run mvn install command, and remove build artifacts (as far as I know, there is no Maven command that will let you download without installing)
+      #This Docker image layer will be rebuilt only when project’s pom.xml file changes
+RUN mvn -T 1C install && rm -rf target
+# copy other source files (keep in image)
+##### COPY src /usr/src/app/src – copy project source files (source, tests, and resources)
+COPY src /usr/src/app/src
+##### Note: if you are using Maven Surefire plugin and want to have all dependencies for the offline build, make sure to lock down Surefire test provider (https://maven.apache.org/surefire/maven-surefire-plugin/examples/providers.html)
+
+--------------------------------
+##### When you build a new Builder version, I suggest you use a --cache-from option passing previous Builder image to it. This will allow you reuse any unmodified Docker layer and avoid obsolete downloads most of the time (if pom.xml did not change or you did not decide to upgrade Maven or JDK).
+# pull latest (or specific version) builder image
+docker pull myrep/mvn-builder:latest
+# build new builder
+docker build -t myrep/mvn-builder:latest --cache-from myrep/mvn-builder:latest .
+
+##### Use Builder container to run tests
+# run tests - test results are saved into $PWD/target/surefire-reports
+docker run -it --rm -v "$PWD"/target:/usr/src/app/target myrep/mvn-builder -T 1C -o test
+
+##### Use Builder container to create application WAR:
+
+# create application WAR file (skip tests) - $PWD/target/spring-boot-rest-example-0.3.0.war
+docker run -it --rm -v $(shell pwd)/target:/usr/src/app/target myrep/mvn-builder package -T 1C -o -Dmaven.test.skip=true

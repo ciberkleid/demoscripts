@@ -1,0 +1,24 @@
+# Multi-stage example: copy binary to smaller image
+# Maximize re-use of cached layers:
+#   - order operations by increasing frequency of change
+#   - decouple operations with differing frequency of change
+#   - include package version to enable "cache-busting"
+
+FROM golang AS build
+WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    cloc=1.8* \
+ && rm -rf /var/lib/apt/lists/*
+COPY go.mod go.sum ./
+RUN go mod download -json \
+    && sleep 3 && echo "SLEPT 3s"                # Add sleep for demo purposes
+COPY hello.go .
+#RUN cloc hello.go                               # Comment out for faster demo
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -a -installsuffix cgo -o hello
+
+FROM scratch
+COPY --from=build /app/hello /
+ENTRYPOINT ["/hello"]
+CMD ["world"]
+

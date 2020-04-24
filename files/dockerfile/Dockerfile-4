@@ -1,0 +1,18 @@
+# Multi-stage example: copy binary to smaller image
+# Also add package to analyze code (count lines) before build
+
+FROM golang AS build
+WORKDIR /app
+COPY *go* ./
+RUN apt-get update && apt-get install -y \
+    cloc \
+ && rm -rf /var/lib/apt/lists/* \
+ && cloc hello.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -a -installsuffix cgo -o hello
+
+FROM scratch
+COPY --from=build /app/hello /
+ENTRYPOINT ["/hello"]
+CMD ["world"]
+

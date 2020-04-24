@@ -1,0 +1,12 @@
+# Simple example, includes build
+# Uses golang image defaults:
+#   GOPATH=/go
+#   PATH=/go/bin:/usr/local/go/bin:...
+
+FROM golang
+WORKDIR /go/src/hello
+COPY *go* ./
+RUN go install .
+ENTRYPOINT ["hello"]
+CMD ["world"]
+
