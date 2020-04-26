@@ -37,6 +37,7 @@ echo "DEMO_SCRIPT=${DEMO_SCRIPT}"
 echo "DEMO_FILES=${DEMO_FILES}"
 echo "DEMO_COLOR=${DEMO_COLOR}"
 echo "DEMO_DELAY=${DEMO_DELAY}"
+echo "DEMO_DELAY=${DEMO_DELAY}"
 echo
 
 ##### TEMP DIR
@@ -60,6 +61,9 @@ fi
 
 # Stop running containers & prune images, containers, volumes, and networks (stopped,unused, and dangling)
 alias dclean="docker ps -a -q | xargs -n1 docker stop; docker system prune -af"
+
+# Rename Terminal tabs
+tabname() { printf '\e]1;%s\a' $1; }
 
 # BEGIN SECTION: Fancy cat and diff aliases
 #brew install colordiff

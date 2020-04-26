@@ -6,15 +6,6 @@
 # https://github.com/spring-projects/spring-boot/blob/08e96427deb59c24a7d93f673284db3287538e25/spring-boot-project/spring-boot-tools/spring-boot-maven-plugin/src/docs/asciidoc/packaging-oci-image.adoc
 # ====================================================
 
-DEMO_HOME=`pwd`
-DEMO_FILES=${DEMO_HOME}/demos/buildpacks
-DEMO_TEMP=${DEMO_HOME}/temp/buildpacks
-source ${DEMO_HOME}/demos/aliases.sh
-
-rm -rf ${DEMO_TEMP}
-mkdir -p ${DEMO_TEMP}
-cd ${DEMO_TEMP}
-
 git clone git@github.com:ciberkleid/cool-app
 pack rebase cool-app --run-image cloudfoundry/run:base-cnb
 docker image rm cloudfoundry/run:0.0.7-base-cnb -f

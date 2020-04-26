@@ -1,45 +1,43 @@
 @_ECHO_OFF
-DEMO_HOME=`pwd`
-DEMO_FILES=${DEMO_HOME}/demos/dockerfile
-DEMO_TEMP=${DEMO_HOME}/temp/dockerfile
-source ${DEMO_HOME}/demos/aliases.sh
-#rm -rf ${DEMO_TEMP}
-mkdir -p ${DEMO_TEMP}
-cd ${DEMO_TEMP}
+tabname dockerfile
 export DOCKER_BUILDKIT=0
 dclean
+
 # Set up go demo
-cp ${DEMO_FILES}/Dockerfile .
-cp ${DEMO_FILES}/hello.go .
+mkdir -p ${DEMO_TEMP}/hello-go
+cd ${DEMO_TEMP}/hello-go
+cp ${DEMO_FILES}/hello-go/Dockerfile .
+cp ${DEMO_FILES}/hello-go/hello.go .
 #go mod init example.com/hello
-cp ${DEMO_FILES}/go.mod .
-cp ${DEMO_FILES}/go.sum .
+cp ${DEMO_FILES}/hello-go/go.mod .
+cp ${DEMO_FILES}/hello-go/go.sum .
 go mod download #-json
+
 # Set up java demo
-#git clone git@github.com:ciberkleid/cool-app
+cd ${DEMO_TEMP}
+if [ ! -d cool-app ]; then git clone git@github.com:ciberkleid/cool-app; fi
 cd cool-app
 # Install dependencies into a repo in the context
-#./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline
-# Package jar
-#./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests
-# Extract packaged jar
-#mkdir -p temp-default; cd temp-default; jar -xf ../target/*.jar; cd ..
-# Package jar with layers enabled
-#./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests -P layered
-# Extract layered jar
-#mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; cd ..
-cd ${DEMO_TEMP}
+if [ ! -d ./.m2/repository ]; then ./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline; fi
+# Package jar & extract (default)
+if [[ -d temp-default ]]; then skip=true; else skip=false; fi
+if [ $skip = false ]; then ./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests; fi
+if [ $skip = false ]; then mkdir -p temp-default; cd temp-default; jar -xf ../target/*.jar; cd ..; fi
+# Package jar & extract (layered)
+if [[ -d temp-layered ]]; then skip=true; else skip=false; fi
+if [ $skip = false ]; then ./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests -P layered; fi
+if [ $skip = false ]; then mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; cd ..; fi
+
+# Set up to start demo
+cd ${DEMO_TEMP}/hello-go
 clear
 @_ECHO_ON
-# Example: simple, scratch base
+# Example: simple
 ls
 go run hello.go
 go run hello.go world
-@_ECHO_ON
 cat Dockerfile
-@_ECHO_OFF
-# build static binary (also rebuild imports as static) for Linux
-@_ECHO_ON
+@_SKIP# build static binary (also rebuild imports as static) for Linux
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o hello
 ls
 docker build . -t hello
@@ -48,7 +46,7 @@ docker run -it hello
 docker run -it hello world
 docker run -it hello /hello world
 # Example: image as binary
-cp ${DEMO_FILES}/Dockerfile-* .
+cp ${DEMO_FILES}/hello-go/Dockerfile-* .
 cat Dockerfile-1
 docker build . -f Dockerfile-1 -t hello
 docker run -it hello
@@ -59,7 +57,7 @@ docker history hello
 # Example: minimize context
 echo "FROM scratch" | time docker build . -f-
 du -hs * | sort -h
-cp ${DEMO_FILES}/.dockerignore .; cat .dockerignore
+cp ${DEMO_FILES}/hello-go/.dockerignore .; cat .dockerignore
 echo "FROM scratch" | time docker build . -f-
 # Example: include build
 cat Dockerfile-2
@@ -89,10 +87,8 @@ head -n8 .dockerignore
 docker build . -t cool-app -f Dockerfile-0-from-jar
 docker images
 docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8081
-@_ECHO_OFF
-# http localhost:8081 # In a different window
-# <Ctrl+C> in container process window to stop container
-@_ECHO_ON
+@_SKIP# http localhost:8081 # In a different window
+@_SKIP# <Ctrl+C> in container process window to stop container
 # Example: user
 docker run -it --entrypoint /bin/sh cool-app -c "whoami; pwd; ls"
 catt Dockerfile-1-nonroot
