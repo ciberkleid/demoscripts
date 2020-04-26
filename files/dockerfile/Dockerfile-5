@@ -1,14 +1,17 @@
 # Multi-stage example: copy binary to smaller image
 # Maximize re-use of cached layers:
+#   - be specific about image tag
 #   - order operations by increasing frequency of change
 #   - decouple operations with differing frequency of change
+#   - avoid installing unnecessary packages (--no-install-recommends)
 #   - include package version to enable "cache-busting"
+#   - remove package manager cache to reduce image size
 
-FROM golang AS build
+FROM golang:1.14.2 AS build
 WORKDIR /app
-RUN apt-get update && apt-get install -y \
-    cloc=1.8* \
- && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        cloc=1.8* \
+    && rm -rf /var/lib/apt/lists/*
 COPY go.mod go.sum ./
 RUN go mod download -json \
     && sleep 3 && echo "SLEPT 3s"                # Add sleep for demo purposes
