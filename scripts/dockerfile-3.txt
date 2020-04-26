@@ -1,0 +1,237 @@
+@_ECHO_OFF
+tabname dockerfile
+export DOCKER_BUILDKIT=0
+dclean
+SAVED_DEMO_DELAY=${DEMO_DELAY}
+
+# Set up go demo
+mkdir -p ${DEMO_TEMP}/hello-go
+cd ${DEMO_TEMP}/hello-go
+cp ${DEMO_FILES}/hello-go/Dockerfile .
+cp ${DEMO_FILES}/hello-go/hello.go .
+#go mod init example.com/hello
+cp ${DEMO_FILES}/hello-go/go.mod .
+cp ${DEMO_FILES}/hello-go/go.sum .
+go mod download #-json
+
+# Set up java demo
+cd ${DEMO_TEMP}
+if [ ! -d cool-app ]; then git clone git@github.com:ciberkleid/cool-app; fi
+cd cool-app
+# Install dependencies into a repo in the context
+if [ ! -d ./.m2/repository ]; then ./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline; fi
+# Package jar & extract (default)
+if [[ -d temp-default ]]; then skip=true; else skip=false; fi
+if [ $skip = false ]; then ./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests; fi
+if [ $skip = false ]; then mkdir -p temp-default; cd temp-default; jar -xf ../target/*.jar; cd ..; fi
+# Package jar & extract (layered)
+if [[ -d temp-layered ]]; then skip=true; else skip=false; fi
+if [ $skip = false ]; then ./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests -P layered; fi
+if [ $skip = false ]; then mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; cd ..; fi
+
+# Set up to start demo
+cd ${DEMO_TEMP}/hello-go
+clear
+@_ECHO_ON
+# Example: simple
+ls
+go run hello.go
+go run hello.go world
+cat Dockerfile
+@_SKIP# build static binary (also rebuild imports as static) for Linux
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o hello
+ls
+docker build . -t hello
+docker images
+docker run hello
+docker run hello world
+docker run hello /hello world
+# Example: image as binary
+cp ${DEMO_FILES}/hello-go/Dockerfile-* .
+cat Dockerfile-1
+docker build . -f Dockerfile-1 -t hello
+docker run hello
+docker run hello sunshine
+# Caching
+docker images
+docker history hello
+# Example: include build
+cat Dockerfile-2
+docker build . -f Dockerfile-2 -t hello
+docker run hello all
+docker images
+# Example: multi-stage
+cat Dockerfile-3
+docker build . -f Dockerfile-3 -t hello
+docker images
+# Example: minimize context
+echo -e "FROM scratch" | docker build . -f-
+@_SKIPdu -hs * | sort -h
+cp ${DEMO_FILES}/hello-go/.dockerignore .; cat .dockerignore
+@_ECHO_OFF
+export DEMO_DELAY=0
+@_ECHO_ON
+echo -e "FROM scratch" | docker build . -f-
+@_ECHO_OFF
+export DEMO_DELAY=${SAVED_DEMO_DELAY}
+@_ECHO_ON
+# Example: leverage cache
+cat Dockerfile-4
+@_SKIPtime docker build . -f Dockerfile-4 -t hello --no-cache
+@_SKIPsed -i '' 's/Hello/Greetings/g' hello.go
+@_SKIPtime docker build . -f Dockerfile-4 -t hello
+cat Dockerfile-5
+@_SKIPtime docker build . -f Dockerfile-5 -t hello --no-cache
+@_SKIPsed -i '' 's/Greetings/Hi/g' hello.go
+@_SKIPsed -i '' 's/Hello/Greetings/g' hello.go
+@_SKIPtime docker build . -f Dockerfile-5 -t hello
+@_ECHO_OFF
+export DEMO_DELAY=0
+@_ECHO_ON
+@_SKIPtime docker build . -f Dockerfile-5 -t hello
+@_ECHO_OFF
+export DEMO_DELAY=${SAVED_DEMO_DELAY}
+@_ECHO_ON
+# Specify tags
+cat Dockerfile-6
+echo -e "FROM golang" | docker build . -f- -t demo:1 -t demo:1.6 -t demo
+docker images | grep demo
+
+# Example: Java
+dclean; clear
+cd cool-app
+# Example: simple, with entrypoint
+catt Dockerfile-0-from-jar
+head -n8 .dockerignore
+docker build . -t cool-app -f Dockerfile-0-from-jar
+docker images
+docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8081
+@_SKIP# http localhost:8081 # In a different window
+@_SKIP# <Ctrl+C> in container process window to stop container
+# Example: user
+docker run --entrypoint /bin/sh cool-app -c "whoami; pwd; ls"
+catt Dockerfile-1-nonroot
+docker build . -t cool-app -f Dockerfile-1-nonroot
+docker run -it --entrypoint /bin/sh cool-app
+# Example: build, buildkit
+catt Dockerfile-2-build
+./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline
+ls .m2/repository
+catt Dockerfile-2-build-bk-bind
+head -n1 Dockerfile-2-build-bk-bind
+cat .dockerignore
+export DOCKER_BUILDKIT=1
+docker build . -t cool-app -f Dockerfile-2-build-bk-bind --progress=plain
+catt Dockerfile-2-build-bk-cache
+# Example: unpacked jar
+catt Dockerfile-3-unpack-jar
+# Example: layered jar
+cat pom.xml
+ls -la temp-*
+head temp-layered/application/BOOT-INF/layers.idx
+tail temp-layered/application/BOOT-INF/layers.idx
+catt Dockerfile-4-layered-jar
+docker build . -t cool-app -f Dockerfile-4-layered-jar
+cp demo/CoolAppController-hello.java src/main/java/io/pivotal/coolapp/CoolAppController.java
+docker build . -t cool-app -f Dockerfile-4-layered-jar
+docker history cool-app
+docker run -p 8080:8080 cool-app
+# Example: maven, distroless
+cat Dockerfile-4-layered-jar-distroless
+docker build . -t cool-app -f Dockerfile-4-layered-jar-distroless
+
+
+
+
+return
+----------------
+add --rm=true to docker build to remove intermediate images after the build
+
+# IMAGES:
+# build
+docker pull maven:3.6.3-jdk-11-openj9
+# smallest, no shell
+docker pull gcr.io/distroless/java:11
+# small, with shell but Java 8 (Dave Syer article)
+docker pull openjdk:8-jdk-alpine
+docker pull openjdk:8-jre-alpine
+# bigger with Java 11 (Phil Webb article)
+# bionic is LTS... can specify in tags
+docker pull adoptopenjdk:11-jdk-hotspot
+docker pull adoptopenjdk:11-jre-hotspot
+# bionic is LTS... can specify in tags (same as above two images right now)
+docker pull adoptopenjdk:11-jdk-hotspot-bionic
+docker pull adoptopenjdk:11-jre-hotspot-bionic
+
+~/workspace/demorunner/temp/dockerfile/cool-app$ docker images
+REPOSITORY               TAG                     IMAGE ID            CREATED             SIZE
+adoptopenjdk             11-jdk-hotspot          601e521725f6        3 weeks ago         423MB
+adoptopenjdk             11-jdk-hotspot-bionic   601e521725f6        3 weeks ago         423MB
+maven                    3.6.3-jdk-11-openj9     d8c1dea02324        4 weeks ago         432MB
+adoptopenjdk             11-jre-hotspot          7394aeeb70de        4 weeks ago         225MB
+adoptopenjdk             11-jre-hotspot-bionic   7394aeeb70de        4 weeks ago         225MB
+openjdk                  8-jre-alpine            f7a292bbb70c        11 months ago       84.9MB
+openjdk                  8-jdk-alpine            a3562aa0b991        11 months ago       105MB
+gcr.io/distroless/java   11                      b198cb1b0f9e        50 years ago        196MB
+
+
+# slim from openjdk doesn't have layers
+# various internet recommendations not to use alpine
+
+
+# ---------------
+# ARTICLE FROM DAVE SYER
+
+# To poke around an image with sh:
+docker run -ti --entrypoint /bin/sh <image:tag>
+
+# To poke around a container:
+docker run --name mycontainer -ti --entrypoint /bin/sh myorg/myapp
+# or get the name or id from docker ps command
+docker exec -ti mycontainer /bin/sh
+
+
+
+# From: https://codefresh.io/docker-tutorial/java_docker_pipeline/
+# Official Maven Docker images keep Maven’s cache folder outside of the container, exposing it as a Docker data volume, using VOLUME root/.m2 command in the Dockerfile. A Docker data volume is a directory within one or more containers that bypasses the Docker Union File System, in simple words: it’s not part of the Docker image.
+
+#Prep
+docker pull maven:3.6.3-jdk-11
+docker tag maven:3.6.3-jdk-11 maven:latest
+
+# Bad mount:
+docker run -it --rm -w /usr/src/app -v "$PWD":/usr/src/app maven mvn clean install
+
+# Proper mount maven local:
+rm -rf ~/.m2/repository/*
+ls -l ~/.m2/repository
+docker run -it --rm -w /usr/src/app -v "$PWD":/usr/src/app -v ~/.m2:/root/.m2 maven mvn clean install
+
+# in order to reuse Maven cache between different builds, mount a Maven cache data volume to some persistent storage (for example, a local directory on the Docker host)
+
+docker run -it --rm -v "$PWD"/pom.xml://usr/src/app/pom.xml -v ~/.m2:/root/.m2 maven mvn install
+# The above command above runs the official Maven Docker image (Maven 3 and OpenJDK 8), mounts project pom.xml file into working directory and "$HOME"/.m2 folder for Maven cache data volume. Running Maven inside this Docker container will download all required JAR files into host’s local folder $HOME/.m2. The next time you create a new Maven Docker container for the same pom.xml file and the same cache mount, Maven will reuse the cache and will download only missing or updated JAR files.
+
+# A Builder is a Docker image that contains everything to allow you creating a reproducible build on any machine and at any point of time.
+
+-------------------------
+OR from https://github.com/rodolfoap/toolbox/tree/master/docker/maven-dependencies/with-home-.m2-dependencies
+
+		<repository>
+			<id>home</id>
+			<url>file://${user.home}/.m2/repository</url>
+			<snapshots><enabled>true</enabled></snapshots>
+		</repository>
+
+AND
+
+mvn -Dmaven.repo.local=./target/m2 dependency:go-offline
+
+AND
+
+FROM maven:3.6.0-jdk-8-slim as build
+WORKDIR /app
+
+COPY target/m2 /root/.m2/repository
+...
+
