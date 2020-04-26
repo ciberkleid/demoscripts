@@ -1,8 +1,16 @@
+# Usage example:
+# source env.sh scripts/dockerfile.txt
+# source demorunner.sh scripts/dockerfile.txt
+
 demo_script=""
+# default color is yellow. Choices are yellow or blue
+export DEMO_COLOR=blue
+# Default delay is 10. To make it faster, increase the number
+export DEMO_DELAY=15
 
 if [ ! -f "${1}" ]; then
   echo "File does not exist: [${1}]"
-  exit
+  kill -INT $$
 else
   demo_script="${1}"
 fi
@@ -20,15 +28,15 @@ export DEMO_HOME=`pwd`
 export DEMO_TEMP="${DEMO_HOME}/temp/${demo_script_nickname}"
 export DEMO_SCRIPT="${demo_script_dirname}/${demo_script_basename}"
 export DEMO_FILES="${demo_script_parent_dirname}/files/${demo_script_nickname}"
-export DEMO_COLOR=""
 
 echo
-echo  "### Setting env vars"
+echo "### Setting env vars"
 echo "DEMO_HOME=${DEMO_HOME}"
 echo "DEMO_TEMP=${DEMO_TEMP}"
 echo "DEMO_SCRIPT=${DEMO_SCRIPT}"
 echo "DEMO_FILES=${DEMO_FILES}"
 echo "DEMO_COLOR=${DEMO_COLOR}"
+echo "DEMO_DELAY=${DEMO_DELAY}"
 echo
 
 ##### TEMP DIR
@@ -43,11 +51,10 @@ if [ -d "${DEMO_TEMP}" ]; then
     echo "Using existing temp directory ${DEMO_TEMP}"
   fi
 fi
-if [ -d "${DEMO_TEMP}" ]; then
+if [ ! -d "${DEMO_TEMP}" ]; then
   echo "Creating temp directory ${DEMO_TEMP}"
   mkdir -p "${DEMO_TEMP}"
 fi
-
 
 ##### ALIASES
 
@@ -69,3 +76,15 @@ alias cattd=cattdf
 catdf() { colordiff -yW"`tput cols`" ${1} ${2}; }
 alias catd=catdf
 # END SECTION: Fancy cat and diff aliases
+
+#####  GUIDANCE
+
+command="cd \${DEMO_TEMP}; source demorunner.sh \${DEMO_SCRIPT} 1; cd \${DEMO_HOME}"
+printf "${command}" | pbcopy
+echo
+echo "Execute the following command (it's in your clipboard!):"
+echo "cd \${DEMO_TEMP}; source demorunner.sh \${DEMO_SCRIPT} 1; cd \${DEMO_HOME}"
+echo
+echo "Expanded form:"
+echo "cd ${DEMO_TEMP}; source demorunner.sh ${DEMO_SCRIPT} 1; cd ${DEMO_HOME}"
+echo
