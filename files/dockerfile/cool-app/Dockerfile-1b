@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:experimental
+
+FROM adoptopenjdk:11-jdk-hotspot AS build
+WORKDIR /app
+COPY .mvn .mvn
+COPY mvnw mvnw
+COPY pom.xml .
+COPY src/ src/
+RUN --mount=type=bind,source=./.m2/repository,target=/root/.m2/repository,rw \
+    ./mvnw clean package -DskipTests -P layered
+WORKDIR /app/target/dependency
+# Can delete RUN mkdir line starting with Spring Boot 2.3.0.RC1
+RUN mkdir -p snapshot-dependencies
+RUN java -Djarmode=layertools -jar ../*.jar extract
+
+FROM adoptopenjdk:11-jre-hotspot AS release
+WORKDIR /app
+ARG DEPENDENCY=/app/target/dependency
+COPY --from=build ${DEPENDENCY}/dependencies/ .
+COPY --from=build ${DEPENDENCY}/spring-boot-loader/ .
+COPY --from=build ${DEPENDENCY}/snapshot-dependencies/ .
+COPY --from=build ${DEPENDENCY}/application/ .
+ENTRYPOINT ["sh", "-c", "exec java ${JAVA_OPTS} -cp .:lib/* org.springframework.boot.loader.JarLauncher ${0} ${@}"]
+

@@ -4,8 +4,9 @@
 #   PATH=/go/bin:/usr/local/go/bin:...
 
 FROM golang
+LABEL maintainer="me@example.org"
 WORKDIR /go/src/hello
-COPY *go* ./
+COPY hello.go ./
 RUN go install .
 ENTRYPOINT ["hello"]
 CMD ["world"]

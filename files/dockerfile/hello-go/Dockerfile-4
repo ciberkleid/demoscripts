@@ -1,15 +1,15 @@
-# Multi-stage example: copy binary to smaller image
-# Also add package to analyze code (count lines) before build
+# Add a system package during the build
 
 FROM golang AS build
 WORKDIR /app
-COPY *go* ./
+COPY . .
 RUN apt-get update
 RUN apt-get install -y cloc && cloc hello.go
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -a -installsuffix cgo -o hello
 
 FROM scratch
+LABEL maintainer="me@example.org"
 COPY --from=build /app/hello /
 ENTRYPOINT ["/hello"]
 CMD ["world"]

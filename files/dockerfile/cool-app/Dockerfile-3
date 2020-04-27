@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:experimental
+
+FROM adoptopenjdk:11-jdk-hotspot AS build
+WORKDIR /app
+COPY .mvn .mvn
+COPY mvnw mvnw
+COPY pom.xml .
+COPY src/ src/
+RUN --mount=type=bind,source=./.m2/repository,target=/root/.m2/repository,rw \
+    ./mvnw clean package -DskipTests
+WORKDIR /app/target/dependency
+RUN jar -xf ../*.jar
+
+FROM adoptopenjdk:11-jre-hotspot AS release
+WORKDIR /app
+ARG DEPENDENCY=/app/target/dependency
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib lib
+COPY --from=build ${DEPENDENCY}/META-INF META-INF
+COPY --from=build ${DEPENDENCY}/org org
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes .
+USER 1002
+ENTRYPOINT ["sh", "-c", "exec java ${JAVA_OPTS} -cp .:lib/* org.springframework.boot.loader.JarLauncher ${0} ${@}"]
+

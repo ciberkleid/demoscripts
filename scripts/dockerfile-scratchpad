@@ -1,0 +1,106 @@
+
+https://gitlab.com/kalilinux/build-scripts/kali-docker/-/blob/28222a5ee0946c9dacc4b7cb988412a450b53c82/Dockerfile
+https://groups.google.com/a/opencontainers.org/forum/#!topic/dev/qYM84b0vays
+# https://github.com/opencontainers/image-spec/blob/master/annotations.md
+LABEL org.opencontainers.image.version=$VERSION \
+      org.opencontainers.image.title="Kali Linux ($RELEASE_DESCRIPTION release)" \
+      org.opencontainers.image.description="Official Kali Linux docker image for $RELEASE_DESCRIPTION" \
+      org.opencontainers.image.url='https://www.kali.org/' \
+      org.opencontainers.image.authors="Kali Developers <devel@kali.org>"
+
+
+
+
+return
+----------------
+add --rm=true to docker build to remove intermediate images after the build
+
+# IMAGES:
+# build
+docker pull maven:3.6.3-jdk-11-openj9
+# smallest, no shell
+docker pull gcr.io/distroless/java:11
+# small, with shell but Java 8 (Dave Syer article)
+docker pull openjdk:8-jdk-alpine
+docker pull openjdk:8-jre-alpine
+# bigger with Java 11 (Phil Webb article)
+# bionic is LTS... can specify in tags
+docker pull adoptopenjdk:11-jdk-hotspot
+docker pull adoptopenjdk:11-jre-hotspot
+# bionic is LTS... can specify in tags (same as above two images right now)
+docker pull adoptopenjdk:11-jdk-hotspot-bionic
+docker pull adoptopenjdk:11-jre-hotspot-bionic
+
+~/workspace/demorunner/temp/dockerfile/cool-app$ docker images
+REPOSITORY               TAG                     IMAGE ID            CREATED             SIZE
+adoptopenjdk             11-jdk-hotspot          601e521725f6        3 weeks ago         423MB
+adoptopenjdk             11-jdk-hotspot-bionic   601e521725f6        3 weeks ago         423MB
+maven                    3.6.3-jdk-11-openj9     d8c1dea02324        4 weeks ago         432MB
+adoptopenjdk             11-jre-hotspot          7394aeeb70de        4 weeks ago         225MB
+adoptopenjdk             11-jre-hotspot-bionic   7394aeeb70de        4 weeks ago         225MB
+openjdk                  8-jre-alpine            f7a292bbb70c        11 months ago       84.9MB
+openjdk                  8-jdk-alpine            a3562aa0b991        11 months ago       105MB
+gcr.io/distroless/java   11                      b198cb1b0f9e        50 years ago        196MB
+
+
+# slim from openjdk doesn't have layers
+# various internet recommendations not to use alpine
+
+
+# ---------------
+# ARTICLE FROM DAVE SYER
+
+# To poke around an image with sh:
+docker run -ti --entrypoint /bin/sh <image:tag>
+
+# To poke around a container:
+docker run --name mycontainer -ti --entrypoint /bin/sh myorg/myapp
+# or get the name or id from docker ps command
+docker exec -ti mycontainer /bin/sh
+
+
+
+# From: https://codefresh.io/docker-tutorial/java_docker_pipeline/
+# Official Maven Docker images keep Maven’s cache folder outside of the container, exposing it as a Docker data volume, using VOLUME root/.m2 command in the Dockerfile. A Docker data volume is a directory within one or more containers that bypasses the Docker Union File System, in simple words: it’s not part of the Docker image.
+
+#Prep
+docker pull maven:3.6.3-jdk-11
+docker tag maven:3.6.3-jdk-11 maven:latest
+
+# Bad mount:
+docker run -it --rm -w /usr/src/app -v "$PWD":/usr/src/app maven mvn clean install
+
+# Proper mount maven local:
+rm -rf ~/.m2/repository/*
+ls -l ~/.m2/repository
+docker run -it --rm -w /usr/src/app -v "$PWD":/usr/src/app -v ~/.m2:/root/.m2 maven mvn clean install
+
+# in order to reuse Maven cache between different builds, mount a Maven cache data volume to some persistent storage (for example, a local directory on the Docker host)
+
+docker run -it --rm -v "$PWD"/pom.xml://usr/src/app/pom.xml -v ~/.m2:/root/.m2 maven mvn install
+# The above command above runs the official Maven Docker image (Maven 3 and OpenJDK 8), mounts project pom.xml file into working directory and "$HOME"/.m2 folder for Maven cache data volume. Running Maven inside this Docker container will download all required JAR files into host’s local folder $HOME/.m2. The next time you create a new Maven Docker container for the same pom.xml file and the same cache mount, Maven will reuse the cache and will download only missing or updated JAR files.
+
+# A Builder is a Docker image that contains everything to allow you creating a reproducible build on any machine and at any point of time.
+
+-------------------------
+OR from https://github.com/rodolfoap/toolbox/tree/master/docker/maven-dependencies/with-home-.m2-dependencies
+
+		<repository>
+			<id>home</id>
+			<url>file://${user.home}/.m2/repository</url>
+			<snapshots><enabled>true</enabled></snapshots>
+		</repository>
+
+AND
+
+mvn -Dmaven.repo.local=./target/m2 dependency:go-offline
+
+AND
+
+FROM maven:3.6.0-jdk-8-slim as build
+WORKDIR /app
+
+COPY target/m2 /root/.m2/repository
+...
+
+

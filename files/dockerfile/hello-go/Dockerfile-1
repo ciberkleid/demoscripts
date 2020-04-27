@@ -1,7 +1,7 @@
-# Simple example, requires pre-built binary
 # Set binary as entrypoint with default arguments
 
 FROM scratch
+LABEL maintainer="me@example.org"
 COPY hello /
 ENTRYPOINT ["/hello"]
 CMD ["world"]

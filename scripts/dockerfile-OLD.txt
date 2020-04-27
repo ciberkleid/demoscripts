@@ -2,6 +2,7 @@
 tabname dockerfile
 export DOCKER_BUILDKIT=0
 dclean
+SAVED_DEMO_DELAY=${DEMO_DELAY}
 
 # Set up go demo
 mkdir -p ${DEMO_TEMP}/hello-go
@@ -42,23 +43,18 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o hello
 ls
 docker build . -t hello
 docker images
-docker run -it hello
-docker run -it hello world
-docker run -it hello /hello world
+docker run hello
+docker run hello world
+docker run hello /hello world
 # Example: image as binary
 cp ${DEMO_FILES}/hello-go/Dockerfile-* .
 cat Dockerfile-1
 docker build . -f Dockerfile-1 -t hello
-docker run -it hello
-docker run -it hello sunshine
+docker run hello
+docker run hello sunshine
 # Caching
 docker images
 docker history hello
-# Example: minimize context
-echo "FROM scratch" | time docker build . -f-
-du -hs * | sort -h
-cp ${DEMO_FILES}/hello-go/.dockerignore .; cat .dockerignore
-echo "FROM scratch" | time docker build . -f-
 # Example: include build
 cat Dockerfile-2
 docker build . -f Dockerfile-2 -t hello
@@ -68,16 +64,39 @@ docker images
 cat Dockerfile-3
 docker build . -f Dockerfile-3 -t hello
 docker images
+# Example: minimize context
+echo -e "FROM scratch" | docker build . -f-
+@_SKIPdu -hs * | sort -h
+cp ${DEMO_FILES}/hello-go/.dockerignore .; cat .dockerignore
+@_ECHO_OFF
+export DEMO_DELAY=0
+@_ECHO_ON
+echo -e "FROM scratch" | docker build . -f-
+@_ECHO_OFF
+export DEMO_DELAY=${SAVED_DEMO_DELAY}
+@_ECHO_ON
 # Example: leverage cache
 cat Dockerfile-4
-time docker build . -f Dockerfile-4 -t hello --no-cache
-sed -i '' 's/Hello/Greetings/g' hello.go
-time docker build . -f Dockerfile-4 -t hello
+@_SKIPtime docker build . -f Dockerfile-4 -t hello --no-cache
+@_SKIPsed -i '' 's/Hello/Greetings/g' hello.go
+@_SKIPtime docker build . -f Dockerfile-4 -t hello
 cat Dockerfile-5
-time docker build . -f Dockerfile-5 -t hello --no-cache
-sed -i '' 's/Greetings/Hi/g' hello.go
-time docker build . -f Dockerfile-5 -t hello
-time docker build . -f Dockerfile-5 -t hello
+@_SKIPtime docker build . -f Dockerfile-5 -t hello --no-cache
+@_SKIPsed -i '' 's/Greetings/Hi/g' hello.go
+@_SKIPsed -i '' 's/Hello/Greetings/g' hello.go
+@_SKIPtime docker build . -f Dockerfile-5 -t hello
+@_ECHO_OFF
+export DEMO_DELAY=0
+@_ECHO_ON
+@_SKIPtime docker build . -f Dockerfile-5 -t hello
+@_ECHO_OFF
+export DEMO_DELAY=${SAVED_DEMO_DELAY}
+@_ECHO_ON
+# Specify tags
+cat Dockerfile-6
+echo -e "FROM golang" | docker build . -f- -t demo:1 -t demo:1.6 -t demo
+docker images | grep demo
+
 # Example: Java
 dclean; clear
 cd cool-app
@@ -90,10 +109,10 @@ docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8
 @_SKIP# http localhost:8081 # In a different window
 @_SKIP# <Ctrl+C> in container process window to stop container
 # Example: user
-docker run -it --entrypoint /bin/sh cool-app -c "whoami; pwd; ls"
+docker run --entrypoint /bin/sh cool-app -c "whoami; pwd; ls"
 catt Dockerfile-1-nonroot
 docker build . -t cool-app -f Dockerfile-1-nonroot
-docker run -it --entrypoint /bin/sh cool-app -c id
+docker run -it --entrypoint /bin/sh cool-app
 # Example: build, buildkit
 catt Dockerfile-2-build
 ./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline

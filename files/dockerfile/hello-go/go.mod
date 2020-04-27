@@ -1,4 +1,4 @@
-module example.com/hello
+module example.com/hello-box
 
 go 1.14
 
