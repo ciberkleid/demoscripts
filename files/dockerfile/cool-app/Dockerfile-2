@@ -5,10 +5,9 @@ WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw mvnw
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw dependency:go-offline
 COPY src/ src/
-RUN ./mvnw clean package -DskipTests
+RUN --mount=type=bind,source=./.m2/repository,target=/root/.m2/repository,rw \
+    ./mvnw clean package -DskipTests
 WORKDIR /app/target/dependency
 RUN jar -xf ../*.jar
 

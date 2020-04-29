@@ -5,9 +5,10 @@ WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw mvnw
 COPY pom.xml .
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw dependency:go-offline
 COPY src/ src/
-RUN --mount=type=bind,source=./.m2/repository,target=/root/.m2/repository,rw \
-    ./mvnw clean package -DskipTests -P layered
+RUN ./mvnw clean package -DskipTests -P layered
 WORKDIR /app/target/dependency
 # Can delete RUN mkdir line starting with Spring Boot 2.3.0.RC1
 RUN mkdir -p snapshot-dependencies

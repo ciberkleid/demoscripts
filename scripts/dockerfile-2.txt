@@ -20,8 +20,8 @@ clear
 @_ECHO_ON
 
 # context
-ls
 echo -e "FROM scratch" | docker build . -f-
+ls
 @_SKIPdu -hs * | sort -h
 cp ${DEMO_FILES}/hello-go/.dockerignore .; cat .dockerignore
 @_ECHO_OFF
@@ -32,6 +32,7 @@ echo -e "FROM scratch" | docker build . -f-
 export DEMO_DELAY=${SAVED_DEMO_DELAY}
 @_ECHO_ON
 
+clear
 # leverage cache
 go run hello-box.go everyone
 cat Dockerfile-4
@@ -51,6 +52,7 @@ time docker build . -f Dockerfile-5 -t hello
 export DEMO_DELAY=${SAVED_DEMO_DELAY}
 @_ECHO_ON
 
+clear
 # tags
 cat Dockerfile-6
 echo -e "FROM golang" | docker build . -f- -t demo:1 -t demo:1.6 -t demo

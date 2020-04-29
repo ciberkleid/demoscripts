@@ -19,38 +19,44 @@ cd ${DEMO_TEMP}/hello-go
 clear
 @_ECHO_ON
 
-# simple example
+@_SKIP# simple example
 ls
 go run hello.go
 go run hello.go world
+clear
 cat Dockerfile
 @_SKIP# build static binary (also rebuild imports as static) for Linux
 @_SKIPCGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o hello
 GOOS=linux go build hello.go; ls
 docker build . -t hello
+clear
 docker images
 docker run hello
 docker run hello world
 docker run hello /hello world
 
-# image as binary
+@_SKIP# image as binary
 cp ${DEMO_FILES}/hello-go/Dockerfile-* .
-cat Dockerfile-1
+clear
+cattd Dockerfile Dockerfile-1
 docker build . -f Dockerfile-1 -t hello
 docker run hello
 docker run hello sunshine
 
+clear
 # caching
 docker images
 docker history hello
 
-# build app
+@_SKIP# build app
+clear
 cat Dockerfile-2
 docker build . -f Dockerfile-2 -t hello
 docker run hello all
 docker images
 
-# multi-stage
+@_SKIP# multi-stage
+clear
 cat Dockerfile-3
 docker build . -f Dockerfile-3 -t hello
 docker images

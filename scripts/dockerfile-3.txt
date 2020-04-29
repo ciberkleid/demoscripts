@@ -32,21 +32,22 @@ clear
 
 # buildkit, unpack jar, entrypoint
 cat Dockerfile-1
-export DOCKER_BUILDKIT=1
+# mount type=bind
+cat Dockerfile-2
 ls .m2/repository
+export DOCKER_BUILDKIT=1
 @_SKIP./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline
-docker build . -t cool-app -f Dockerfile-1          # --progress=plain
+docker build . -t cool-app -f Dockerfile-2          # --progress=plain
 docker images
 docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8081
 @_SKIP# http localhost:8081 # In a different window
 @_SKIP# <Ctrl+C> in container process window to stop container
 
-# mount type=cache
-cattd Dockerfile-1 Dockerfile-2
-
+clear
 # user
+@_SKIPdocker exec cool-app whoami
 docker run --entrypoint /bin/sh cool-app -c whoami
-cattd Dockerfile-1 Dockerfile-3
+cattd Dockerfile-2 Dockerfile-3
 docker build . -t cool-app -f Dockerfile-3
 docker run -it --entrypoint /bin/sh cool-app
 
