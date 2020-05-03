@@ -6,6 +6,11 @@
 # https://github.com/spring-projects/spring-boot/blob/08e96427deb59c24a7d93f673284db3287538e25/spring-boot-project/spring-boot-tools/spring-boot-maven-plugin/src/docs/asciidoc/packaging-oci-image.adoc
 # ====================================================
 
+@_ECHO_OFF
+tabname buildpackas
+SAVED_DEMO_DELAY=${DEMO_DELAY}
+dclean
+
 git clone git@github.com:ciberkleid/cool-app
 pack rebase cool-app --run-image cloudfoundry/run:base-cnb
 docker image rm cloudfoundry/run:0.0.7-base-cnb -f
