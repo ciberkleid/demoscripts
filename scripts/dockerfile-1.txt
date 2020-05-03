@@ -24,7 +24,7 @@ ls
 go run hello.go
 go run hello.go world
 clear
-cat Dockerfile
+bat Dockerfile
 @_SKIP# build static binary (also rebuild imports as static) for Linux
 @_SKIPCGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o hello
 GOOS=linux go build hello.go; ls
@@ -36,8 +36,7 @@ docker run hello world
 docker run hello /hello world
 
 @_SKIP# image as binary
-cp ${DEMO_FILES}/hello-go/Dockerfile-* .
-clear
+cp ${DEMO_FILES}/hello-go/Dockerfile-* .; clear
 cattd Dockerfile Dockerfile-1
 docker build . -f Dockerfile-1 -t hello
 docker run hello
@@ -50,13 +49,13 @@ docker history hello
 
 @_SKIP# build app
 clear
-cat Dockerfile-2
+bat Dockerfile-2
 docker build . -f Dockerfile-2 -t hello
 docker run hello all
 docker images
 
 @_SKIP# multi-stage
 clear
-cat Dockerfile-3
+bat Dockerfile-3
 docker build . -f Dockerfile-3 -t hello
 docker images

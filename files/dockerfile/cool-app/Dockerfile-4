@@ -1,29 +1,18 @@
 # syntax=docker/dockerfile:experimental
 
-# Sample command
-#   docker run -p 8081:8081 -e "JAVA_TOOL_OPTIONS=-Ddebug -Xmx128m" cool-app --server.port=8081
-
-ARG JAVA_VERSION=11
-ARG MAVEN_VERSION=3.6.3
-
-FROM maven:${MAVEN_VERSION}-jdk-${JAVA_VERSION}-openj9 AS build
+FROM adoptopenjdk:11-jdk-hotspot AS build
 WORKDIR /app
+COPY .mvn .mvn
+COPY mvnw mvnw
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw dependency:go-offline
 COPY src/ src/
-RUN mvn clean package -DskipTests -P layered
-WORKDIR /app/target/dependency
-# Can delete RUN mkdir line starting with Spring Boot 2.3.0.RC1
-RUN mkdir -p snapshot-dependencies
-RUN java -Djarmode=layertools -jar ../*.jar extract
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw clean package -DskipTests --offline
 
-FROM gcr.io/distroless/java:${JAVA_VERSION} AS release
+FROM adoptopenjdk:11-jre-hotspot AS release
 WORKDIR /app
-ARG DEPENDENCY=/app/target/dependency
-COPY --from=build ${DEPENDENCY}/dependencies/ .
-COPY --from=build ${DEPENDENCY}/spring-boot-loader/ .
-COPY --from=build ${DEPENDENCY}/snapshot-dependencies/ .
-COPY --from=build ${DEPENDENCY}/application/ .
-USER nonroot
-ENTRYPOINT ["java", "-cp", ".:lib/*", "org.springframework.boot.loader.JarLauncher"]
-
+COPY --from=build /app/target/*.jar app.jar
+USER 1002
+ENTRYPOINT ["sh", "-c", "exec java ${JAVA_OPTS} -jar app.jar ${0} ${@}"]

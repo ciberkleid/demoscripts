@@ -24,46 +24,78 @@ if [ $skip = false ]; then mkdir -p temp-layered; cd temp-layered; java -Djarmod
 # Set up to start demo
 cd ${DEMO_TEMP}/cool-app
 rm Dockerfile*
-rm .dockerignore
+rm *.dockerignore*
 # Copy everything, including hidden files
 cp -r ${DEMO_FILES}/cool-app/. .
+cp pom-no-actuator.xml pom.xml
 clear
-@_ECHO_ON
 
-# buildkit, unpack jar, entrypoint
-cat Dockerfile-1
-# mount type=bind
-cat Dockerfile-2
-ls .m2/repository
+@_ECHO_ON
+# review
+bat Dockerfile-1
+bat .dockerignore
+clear
+
+# buildkit
+@_ECHO_OFF
+alias bat="bat -l Dockerfile"
+@_ECHO_ON
+batd Dockerfile-1 Dockerfile-2
+@_SKIPcatd Dockerfile-1 Dockerfile-2
+@_SKIPdiff -u Dockerfile-1 Dockerfile-2 | delta
 export DOCKER_BUILDKIT=1
+docker build . -t cool-app -f Dockerfile-2     # --progress=plain
+colordiff pom.xml pom-actuator.xml
+cp pom-actuator.xml pom.xml
+docker build . -t cool-app -f Dockerfile-2
+
+clear
+# security
+@_SKIPdocker exec cool-app whoami       # for a running container
+docker run --entrypoint /bin/sh cool-app -c whoami
+batd Dockerfile-2 Dockerfile-3
+docker build . -t cool-app -f Dockerfile-3
+docker run -it --entrypoint /bin/sh cool-app
+
+@_SKIPclear
+@_SKIP# bind mount
+@_SKIPcatd Dockerfile-2 Dockerfile-2b
 @_SKIP./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline
-docker build . -t cool-app -f Dockerfile-2          # --progress=plain
-docker images
+@_SKIPls ./.m2/repository
+@_SKIPdocker build . -t cool-app -f Dockerfile-2b
+@_SKIPcat Dockerfile-2b.dockerignore
+
+clear
+# java entrypoint
+docker run -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8081
+docker run -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app
+# JAVA_TOOL_OPTIONS will work
+colordiff Dockerfile-3 Dockerfile-4
+docker build . -t cool-app -f Dockerfile-4
 docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8081
 @_SKIP# http localhost:8081 # In a different window
 @_SKIP# <Ctrl+C> in container process window to stop container
 
 clear
-# user
-@_SKIPdocker exec cool-app whoami
-docker run --entrypoint /bin/sh cool-app -c whoami
-cattd Dockerfile-2 Dockerfile-3
-docker build . -t cool-app -f Dockerfile-3
-docker run -it --entrypoint /bin/sh cool-app
+# java unpack jar
+ls -la temp-default
+batd Dockerfile-4 Dockerfile-5
 
-return
-# layered jar
+# gravy: layered jar (Spring Boot 2.3.0.M1+)
 cat pom.xml
-ls -la temp-*
-head temp-layered/application/BOOT-INF/layers.idx
-tail temp-layered/application/BOOT-INF/layers.idx
-catt Dockerfile-4-layered-jar
-docker build . -t cool-app -f Dockerfile-4-layered-jar
-cp demo/CoolAppController-hello.java src/main/java/io/pivotal/coolapp/CoolAppController.java
-docker build . -t cool-app -f Dockerfile-4-layered-jar
+ls -la temp-layered
+@_SKIPhead temp-layered/application/BOOT-INF/layers.idx
+@_SKIPtail temp-layered/application/BOOT-INF/layers.idx
+bat Dockerfile-6
+docker build . -t cool-app -f Dockerfile-6
+@_SKIPcp demo/CoolAppController-hello.java src/main/java/io/pivotal/coolapp/CoolAppController.java
+cp pom-no-actuator.xml pom.xml
+docker build . -t cool-app -f Dockerfile-6
 docker history cool-app
-docker run -p 8080:8080 cool-app
+@_SKIPdocker run -p 8080:8080 cool-app
 
-# maven, distroless
-cat Dockerfile-4-layered-jar-distroless
-docker build . -t cool-app -f Dockerfile-4-layered-jar-distroless
+# args, choice of image
+bat Dockerfile-7
+
+@_ECHO_OFF
+return

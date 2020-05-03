@@ -35,11 +35,11 @@ export DEMO_DELAY=${SAVED_DEMO_DELAY}
 clear
 # leverage cache
 go run hello-box.go everyone
-cat Dockerfile-4
+bat Dockerfile-4
 @_SKIPtime docker build . -f Dockerfile-4 -t hello --no-cache
 @_SKIPsed -i '' 's/Hello/Greetings/g' hello-box.go
 @_SKIPtime docker build . -f Dockerfile-4 -t hello
-cat Dockerfile-5
+bat Dockerfile-5
 time docker build . -f Dockerfile-5 -t hello
 @_SKIPsed -i '' 's/Greetings/Hi/g' hello-box.go
 sed -i '' 's/Hello/Greetings/g' hello-box.go
@@ -54,6 +54,6 @@ export DEMO_DELAY=${SAVED_DEMO_DELAY}
 
 clear
 # tags
-cat Dockerfile-6
+bat Dockerfile-6
 echo -e "FROM golang" | docker build . -f- -t demo:1 -t demo:1.6 -t demo
 docker images | grep demo

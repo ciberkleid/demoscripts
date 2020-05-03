@@ -5,14 +5,11 @@ WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw mvnw
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw dependency:go-offline
 COPY src/ src/
-RUN --mount=type=cache,target=/root/.m2 \
+RUN --mount=type=bind,source=./.m2/repository,target=/root/.m2/repository,rw \
     ./mvnw clean package -DskipTests --offline
 
 FROM adoptopenjdk:11-jre-hotspot AS release
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-USER 1002
 CMD ["java", "-jar", "app.jar"]

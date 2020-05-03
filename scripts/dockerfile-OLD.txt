@@ -37,7 +37,7 @@ clear
 ls
 go run hello.go
 go run hello.go world
-cat Dockerfile
+bat Dockerfile
 @_SKIP# build static binary (also rebuild imports as static) for Linux
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o hello
 ls
@@ -48,7 +48,7 @@ docker run hello world
 docker run hello /hello world
 # Example: image as binary
 cp ${DEMO_FILES}/hello-go/Dockerfile-* .
-cat Dockerfile-1
+bat Dockerfile-1
 docker build . -f Dockerfile-1 -t hello
 docker run hello
 docker run hello sunshine
@@ -56,12 +56,12 @@ docker run hello sunshine
 docker images
 docker history hello
 # Example: include build
-cat Dockerfile-2
+bat Dockerfile-2
 docker build . -f Dockerfile-2 -t hello
 docker run hello all
 docker images
 # Example: multi-stage
-cat Dockerfile-3
+bat Dockerfile-3
 docker build . -f Dockerfile-3 -t hello
 docker images
 # Example: minimize context
@@ -76,11 +76,11 @@ echo -e "FROM scratch" | docker build . -f-
 export DEMO_DELAY=${SAVED_DEMO_DELAY}
 @_ECHO_ON
 # Example: leverage cache
-cat Dockerfile-4
+bat Dockerfile-4
 @_SKIPtime docker build . -f Dockerfile-4 -t hello --no-cache
 @_SKIPsed -i '' 's/Hello/Greetings/g' hello.go
 @_SKIPtime docker build . -f Dockerfile-4 -t hello
-cat Dockerfile-5
+bat Dockerfile-5
 @_SKIPtime docker build . -f Dockerfile-5 -t hello --no-cache
 @_SKIPsed -i '' 's/Greetings/Hi/g' hello.go
 @_SKIPsed -i '' 's/Hello/Greetings/g' hello.go
@@ -93,7 +93,7 @@ export DEMO_DELAY=0
 export DEMO_DELAY=${SAVED_DEMO_DELAY}
 @_ECHO_ON
 # Specify tags
-cat Dockerfile-6
+bat Dockerfile-6
 echo -e "FROM golang" | docker build . -f- -t demo:1 -t demo:1.6 -t demo
 docker images | grep demo
 
@@ -137,7 +137,7 @@ docker build . -t cool-app -f Dockerfile-4-layered-jar
 docker history cool-app
 docker run -p 8080:8080 cool-app
 # Example: maven, distroless
-cat Dockerfile-4-layered-jar-distroless
+bat Dockerfile-4-layered-jar-distroless
 docker build . -t cool-app -f Dockerfile-4-layered-jar-distroless
 
 

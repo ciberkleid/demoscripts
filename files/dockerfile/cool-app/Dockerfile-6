@@ -8,11 +8,12 @@ COPY pom.xml .
 RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw dependency:go-offline
 COPY src/ src/
-RUN ./mvnw clean package -DskipTests -P layered
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw clean package -DskipTests --offline -P layered
 WORKDIR /app/target/dependency
-# Can delete RUN mkdir line starting with Spring Boot 2.3.0.RC1
-RUN mkdir -p snapshot-dependencies
 RUN java -Djarmode=layertools -jar ../*.jar extract
+# Temporary workaround to open issue
+RUN mkdir -p snapshot-dependencies
 
 FROM adoptopenjdk:11-jre-hotspot AS release
 WORKDIR /app
@@ -21,5 +22,5 @@ COPY --from=build ${DEPENDENCY}/dependencies/ .
 COPY --from=build ${DEPENDENCY}/spring-boot-loader/ .
 COPY --from=build ${DEPENDENCY}/snapshot-dependencies/ .
 COPY --from=build ${DEPENDENCY}/application/ .
+USER 1002
 ENTRYPOINT ["sh", "-c", "exec java ${JAVA_OPTS} -cp .:lib/* org.springframework.boot.loader.JarLauncher ${0} ${@}"]
-
