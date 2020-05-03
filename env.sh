@@ -19,13 +19,7 @@ else
   demo_files="${2}"
 fi
 
-##### ENV VARS
-
-# default color is yellow. Choices are yellow or blue
-export DEMO_COLOR=blue
-# Default delay is 10. To make it faster, increase the number
-export DEMO_DELAY=15
-export SAVED_DEMO_DELAY=${DEMO_DELAY}
+##### DEMO ENV VARS
 
 # brew install coreutils (for greadlink)
 demo_script_absolute_path=$(greadlink -f "${demo_script}")
@@ -36,6 +30,9 @@ export DEMO_HOME=`pwd`
 export DEMO_SCRIPT="${demo_script_absolute_path}"
 export DEMO_FILES="${demo_files_absolute_path}"
 export DEMO_TEMP="${DEMO_HOME}/temp/${demo_script_handle}"
+# Default delay is 10. To make it faster, increase the number
+export DEMO_DELAY=15
+export SAVED_DEMO_DELAY=${DEMO_DELAY}
 
 echo
 echo "### Setting env vars"
@@ -47,6 +44,35 @@ echo "DEMO_COLOR=${DEMO_COLOR}"
 echo "DEMO_DELAY=${DEMO_DELAY}"
 echo "SAVED_DEMO_DELAY=${SAVED_DEMO_DELAY}"
 echo
+
+##### APPEARANCE SETTINGS
+# https://github.com/sharkdp/bat
+#brew install bat
+
+mkdir -p "$(bat --config-dir)/themes"
+cp config/bat/themes/*.tmTheme "$(bat --config-dir)/themes"
+bat cache --build
+
+export BAT_STYLE=grid
+#export BAT_STYLE=plain
+#export BAT_STYLE=numbers
+export BAT_PAGER=""
+#export BAT_PAGER="never"
+
+if [ -z ${COLORFGBG} ]; then
+  # Background is white
+  export BAT_THEME=ansi-light-MODIFIED
+  #export BAT_THEME=GitHub
+  export DEMO_COLOR=blue
+else
+  # Background is black
+  if [[ ${DEMO_COLOR} != white ]]; then
+    export DEMO_COLOR=yellow
+  fi
+fi
+
+# https://github.com/dandavison/delta
+#brew install git-delta
 
 ##### TEMP DIR
 
@@ -79,6 +105,9 @@ alias dclean2="docker ps -a -q | xargs -n1 docker rm -f; docker image prune -f; 
 # Rename Terminal tabs
 tabname() { printf '\e]1;%s\a' $1; }
 
+# Change Terminal prompt to show only a $
+export PS1="\[\033[0m\]\$ "
+
 # BEGIN SECTION: Fancy cat and diff aliases
 #brew install colordiff
 
@@ -94,6 +123,10 @@ alias cattd=cattdf
 catdf() { colordiff -yW"`tput cols`" ${1} ${2}; }
 alias catd=catdf
 # END SECTION: Fancy cat and diff aliases
+
+# Generate args to highlight changed lines for bat
+batdf() { hArgs=$(diff --unchanged-line-format="" --old-line-format="" --new-line-format="%dn " ${1} ${2} | xargs -n1 -I {} printf -- '-H %s:%s ' {} {}); bat ${2} $hArgs; }
+alias batd=batdf
 
 #####  GUIDANCE
 
