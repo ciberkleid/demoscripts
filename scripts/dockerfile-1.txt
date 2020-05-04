@@ -4,6 +4,8 @@ export DOCKER_BUILDKIT=0
 SAVED_DEMO_DELAY=${DEMO_DELAY}
 dclean
 
+export BAT_LANG_FLAG="-l Dockerfile"
+
 # Set up go demo
 mkdir -p ${DEMO_TEMP}/hello-go
 cd ${DEMO_TEMP}/hello-go

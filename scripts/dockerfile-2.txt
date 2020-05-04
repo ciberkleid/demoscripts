@@ -4,6 +4,8 @@ export DOCKER_BUILDKIT=0
 SAVED_DEMO_DELAY=${DEMO_DELAY}
 dclean2
 
+export BAT_LANG_FLAG="-l Dockerfile"
+
 # Set up go demo
 mkdir -p ${DEMO_TEMP}/hello-go
 cd ${DEMO_TEMP}/hello-go
@@ -23,8 +25,12 @@ clear
 echo -e "FROM scratch" | docker build . -f-
 ls
 @_SKIPdu -hs * | sort -h
-cp ${DEMO_FILES}/hello-go/.dockerignore .; cat .dockerignore
 @_ECHO_OFF
+export BAT_LANG_FLAG="-l exclude"
+@_ECHO_ON
+cp ${DEMO_FILES}/hello-go/.dockerignore .; bat .dockerignore
+@_ECHO_OFF
+export BAT_LANG_FLAG="-l Dockerfile"
 export DEMO_DELAY=0
 @_ECHO_ON
 echo -e "FROM scratch" | docker build . -f-

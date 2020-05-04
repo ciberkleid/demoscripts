@@ -4,6 +4,8 @@ export DOCKER_BUILDKIT=0
 SAVED_DEMO_DELAY=${DEMO_DELAY}
 dclean
 
+export BAT_LANG_FLAG="-l Dockerfile"
+
 # Set up java demo
 @_SKIPdocker pull adoptopenjdk:11-jdk-hotspot
 @_SKIPdocker pull adoptopenjdk:11-jre-hotspot
@@ -33,13 +35,16 @@ clear
 @_ECHO_ON
 # review
 bat Dockerfile-1
+@_ECHO_OFF
+export BAT_LANG_FLAG="-l exclude"
+@_ECHO_ON
 bat .dockerignore
+@_ECHO_OFF
+export BAT_LANG_FLAG="-l Dockerfile"
+@_ECHO_ON
 clear
 
 # buildkit
-@_ECHO_OFF
-alias bat="bat -l Dockerfile"
-@_ECHO_ON
 batd Dockerfile-1 Dockerfile-2
 @_SKIPcatd Dockerfile-1 Dockerfile-2
 @_SKIPdiff -u Dockerfile-1 Dockerfile-2 | delta
@@ -81,21 +86,17 @@ clear
 ls -la temp-default
 batd Dockerfile-4 Dockerfile-5
 
-# gravy: layered jar (Spring Boot 2.3.0.M1+)
-cat pom.xml
-ls -la temp-layered
+@_SKIP# gravy: layered jar (Spring Boot 2.3.0.M1+)
+@_SKIPcat pom.xml
+@_SKIPls -la temp-layered
 @_SKIPhead temp-layered/application/BOOT-INF/layers.idx
 @_SKIPtail temp-layered/application/BOOT-INF/layers.idx
-bat Dockerfile-6
-docker build . -t cool-app -f Dockerfile-6
+@_SKIPbat Dockerfile-6
+@_SKIPdocker build . -t cool-app -f Dockerfile-6
 @_SKIPcp demo/CoolAppController-hello.java src/main/java/io/pivotal/coolapp/CoolAppController.java
-cp pom-no-actuator.xml pom.xml
-docker build . -t cool-app -f Dockerfile-6
-docker history cool-app
+@_SKIPdocker build . -t cool-app -f Dockerfile-6
+@_SKIPdocker history cool-app
 @_SKIPdocker run -p 8080:8080 cool-app
 
-# args, choice of image
-bat Dockerfile-7
-
-@_ECHO_OFF
-return
+@_SKIP# args, choice of image
+@_SKIPbat Dockerfile-7

@@ -125,8 +125,10 @@ alias catd=catdf
 # END SECTION: Fancy cat and diff aliases
 
 # Generate args to highlight changed lines for bat
-batdf() { hArgs=$(diff --unchanged-line-format="" --old-line-format="" --new-line-format="%dn " ${1} ${2} | xargs -n1 -I {} printf -- '-H %s:%s ' {} {}); bat ${2} $hArgs; }
+BAT_LANG_FLAG="-l Dockerfile"
+batdf() { hArgs=$(diff --unchanged-line-format="" --old-line-format="" --new-line-format="%dn " ${1} ${2} | xargs -n1 -I {} printf -- '-H %s:%s ' {} {}); bat ${BAT_LANG_FLAG} ${2} $hArgs; }
 alias batd=batdf
+alias bat="bat ${BAT_LANG_FLAG}"
 
 #####  GUIDANCE
 
