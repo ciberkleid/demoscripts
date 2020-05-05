@@ -8,6 +8,7 @@ COPY src/ src/
 RUN ./mvnw clean package -DskipTests --offline
 
 FROM adoptopenjdk:11-jre-hotspot
+LABEL org.opencontainers.image.authors="me@example.org"
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 CMD ["java", "-jar", "app.jar"]

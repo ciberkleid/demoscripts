@@ -6,7 +6,7 @@ COPY hello.go ./
 RUN GOOS=linux go build hello.go
 
 FROM scratch
-LABEL maintainer="me@example.org"
+LABEL org.opencontainers.image.authors="me@example.org"
 COPY --from=build /app/hello /
 ENTRYPOINT ["/hello"]
 CMD ["world"]

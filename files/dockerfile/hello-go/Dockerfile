@@ -1,7 +1,7 @@
 # Simple example, requires pre-built binary
 
 FROM scratch
-LABEL maintainer="me@example.org"
+LABEL org.opencontainers.image.authors="me@example.org"
 COPY hello /
 CMD ["/hello"]
 

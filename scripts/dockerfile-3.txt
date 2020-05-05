@@ -33,7 +33,7 @@ cp pom-no-actuator.xml pom.xml
 clear
 
 @_ECHO_ON
-# review
+@_SKIP# review
 bat Dockerfile-1
 @_ECHO_OFF
 export BAT_LANG_FLAG="-l exclude"
@@ -83,12 +83,12 @@ docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8
 
 clear
 # java unpack jar
-ls -la temp-default
+ls -l temp-default/*
 batd Dockerfile-4 Dockerfile-5
 
 @_SKIP# gravy: layered jar (Spring Boot 2.3.0.M1+)
 @_SKIPcat pom.xml
-@_SKIPls -la temp-layered
+@_SKIPls -l temp-layered
 @_SKIPhead temp-layered/application/BOOT-INF/layers.idx
 @_SKIPtail temp-layered/application/BOOT-INF/layers.idx
 @_SKIPbat Dockerfile-6

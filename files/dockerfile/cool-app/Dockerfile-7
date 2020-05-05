@@ -17,6 +17,7 @@ RUN java -Djarmode=layertools -jar ../*.jar extract
 RUN mkdir -p snapshot-dependencies
 
 FROM gcr.io/distroless/java:${JAVA_VERSION} AS release
+LABEL org.opencontainers.image.authors="me@example.org"
 WORKDIR /app
 ARG DEPENDENCY=/app/target/dependency
 COPY --from=build ${DEPENDENCY}/dependencies/ .

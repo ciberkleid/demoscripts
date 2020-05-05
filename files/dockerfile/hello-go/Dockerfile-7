@@ -16,13 +16,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -a -installsuffix cgo -o hello
 
 FROM scratch
-ARG AUTHORS
 ARG VERSION
-LABEL maintainer="${AUTHORS}" \
-      org.opencontainers.image.authors="${AUTHORS}" \
-      org.opencontainers.image.description="Hello world - demo application" \
-      org.opencontainers.image.title="hello" \
-      org.opencontainers.image.version=${VERSION}
+LABEL org.opencontainers.image.authors="me@example.org"
+LABEL org.opencontainers.image.version=${VERSION}
 COPY --from=build /app/hello /
 ENTRYPOINT ["/hello"]
 CMD ["world"]

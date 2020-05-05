@@ -21,12 +21,15 @@ cd ${DEMO_TEMP}/hello-go
 clear
 @_ECHO_ON
 
-# context
+go run hello-box.go everyone
+ls *go*
+
 echo -e "FROM scratch" | docker build . -f-
 ls
 @_SKIPdu -hs * | sort -h
 @_ECHO_OFF
 export BAT_LANG_FLAG="-l exclude"
+
 @_ECHO_ON
 cp ${DEMO_FILES}/hello-go/.dockerignore .; bat .dockerignore
 @_ECHO_OFF
@@ -39,8 +42,6 @@ export DEMO_DELAY=${SAVED_DEMO_DELAY}
 @_ECHO_ON
 
 clear
-# leverage cache
-go run hello-box.go everyone
 bat Dockerfile-4
 @_SKIPtime docker build . -f Dockerfile-4 -t hello --no-cache
 @_SKIPsed -i '' 's/Hello/Greetings/g' hello-box.go
@@ -61,5 +62,5 @@ export DEMO_DELAY=${SAVED_DEMO_DELAY}
 clear
 # tags
 bat Dockerfile-6
-echo -e "FROM golang" | docker build . -f- -t demo:1 -t demo:1.6 -t demo
+echo -e "FROM golang" | docker build . -f- -t demo:1.6 -t demo:1 -t demo
 docker images | grep demo
