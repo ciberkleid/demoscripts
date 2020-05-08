@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw clean package -DskipTests --offline
 
 FROM adoptopenjdk:11-jdk-hotspot AS build-with-m2-bind
-LABEL org.opencontainers.image.authors="me@example.org"
+LABEL org.opencontainers.image.authors="me@example.com"
 WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw mvnw
