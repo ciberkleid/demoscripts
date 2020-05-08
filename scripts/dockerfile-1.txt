@@ -6,18 +6,16 @@ dclean
 
 export BAT_LANG_FLAG="-l Dockerfile"
 
-# Set up go demo
-mkdir -p ${DEMO_TEMP}/hello-go
-cd ${DEMO_TEMP}/hello-go
-cp ${DEMO_FILES}/hello-go/Dockerfile .
-cp ${DEMO_FILES}/hello-go/hello.go .
-#go mod init example.com/hello
-@_SKIPcp ${DEMO_FILES}/hello-go/go.mod .
-@_SKIPcp ${DEMO_FILES}/hello-go/go.sum .
-@_SKIPgo mod download #-json
+# Set up demo
+cd ${DEMO_TEMP}
+if [ ! -d hello-go ]; then git clone git@github.com:ciberkleid/hello-go; fi
+# Stash some files for later
+HELLO_FILES="${DEMO_TEMP}/hello-go-temp/hello"
+mkdir -p "${HELLO_FILES}"
+mv hello-go/hello/Dockerfile-*  "${HELLO_FILES}"/
 
-# Set up to start demo
-cd ${DEMO_TEMP}/hello-go
+# Start demo
+cd ${DEMO_TEMP}/hello-go/hello
 clear
 @_ECHO_ON
 
@@ -38,7 +36,7 @@ docker run hello world
 docker run hello /hello world
 
 @_SKIP# image as binary
-cp ${DEMO_FILES}/hello-go/Dockerfile-* .; clear
+mv "${HELLO_FILES}"/* .; clear
 cattd Dockerfile Dockerfile-1
 docker build . -f Dockerfile-1 -t hello
 docker run hello

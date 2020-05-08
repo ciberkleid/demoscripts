@@ -1,8 +1,0 @@
-# Set binary as entrypoint with default arguments
-
-FROM scratch
-LABEL org.opencontainers.image.authors="me@example.org"
-COPY hello /
-ENTRYPOINT ["/hello"]
-CMD ["world"]
-
