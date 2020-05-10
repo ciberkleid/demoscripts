@@ -1,0 +1,113 @@
+@_ECHO_OFF
+tabname dockerfile-master
+SAVED_DEMO_DELAY=${DEMO_DELAY}
+export BAT_LANG_FLAG="-l Dockerfile"
+export DOCKER_BUILDKIT=0
+dclean
+cd ${DEMO_TEMP}
+
+# Set up demo files
+go clean -x -modcache
+if [ ! -d hello-go ]; then git clone git@github.com:ciberkleid/hello-go; fi
+cd hello-go/src
+# To initialize, run: go mod init example.com/hello; go test
+unset HELLO_ARG
+
+# Start demo
+clear
+@_ECHO_ON
+
+ls
+# traditional
+go version
+go install
+ls -lrt $GOPATH/pkg/mod/*/* | tail -n1
+ls -ltr $GOPATH/bin | tail -n1
+hello
+hello world
+hello world champions
+hello "world champions"
+@_SKIP# Talk about expectations of prod: same OS? package installed? binary in PATH?
+# Works on my machine... ¯\_(?)_/¯
+
+clear
+# containerize
+cp ../Dockerfiles/* .
+bat Dockerfile
+docker build . -t hello
+docker images
+docker run hello
+docker run hello hello
+docker run hello hello world
+docker run hello hello one and all
+docker run hello hello "one and all"
+@_SKIP# Guaranteed: same OS, package installed, binary in PATH
+
+# launch behavior
+catd Dockerfile Dockerfile-1
+docker build . -t hello -f Dockerfile-1
+docker run hello
+docker run --init -e TINI_KILL_PROCESS_GROUP=1 hello one and all
+
+# Linux signals
+bat Dockerfile-2
+@_ECHO_OFF
+export BAT_LANG_FLAG="-l sh"
+@_ECHO_ON
+bat run.sh
+@_ECHO_OFF
+export BAT_LANG_FLAG="-l Dockerfile"
+@_ECHO_ON
+docker build . -t hello -f Dockerfile-2
+docker run hello
+docker run hello one and all
+
+@_SKIP# layers/caching
+docker images
+docker history hello
+bat Dockerfile-2
+bat Dockerfile-3
+@_SKIP# Talk about COPY command location, OS package commands, single command for dependencies and source
+time docker build . -t hello -f Dockerfile-3 --no-cache
+sed -i '' 's/Hello/Greetings/g' hello.go
+time docker build . -t hello -f Dockerfile-3
+
+# context
+@_SKIPecho -e "FROM golang" | docker build . -t demo -f-
+@_SKIPdu -hs * | sort -h
+ls
+cp ../Dockerfiles/.dockerignore .
+@_ECHO_OFF
+export BAT_LANG_FLAG="-l exclude"
+@_ECHO_ON
+bat .dockerignore
+@_SKIPecho -e "FROM golang" | docker build . -t demo -f-
+@_ECHO_OFF
+export BAT_LANG_FLAG="-l Dockerfile"
+@_ECHO_ON
+
+clear
+# security
+@_SKIPdocker exec <image-name> whoami       # for a running container
+docker run --entrypoint /bin/sh hello -c "whoami; pwd; ls -l"
+catd Dockerfile-3 Dockerfile-4
+docker build . -t hello -f Dockerfile-4
+docker run -it --entrypoint /bin/sh hello
+
+# tagging
+@_SKIPecho -ne "FROM golang\nLABEL find=me" | docker build . -t demo:1.6 -t demo:1 -t demo -f-
+@_SKIPdocker images --filter "label=find=me"
+docker build . -f Dockerfile-4 -t hello -t hello:1 -t hello:1.6
+docker images | grep hello
+sed -i '' 's/world/worlds/g' Dockerfile-4
+docker build . -f Dockerfile-4 -t hello -t hello:1 -t hello:1.7
+docker images | grep hello
+batd Dockerfile-4 Dockerfile-5
+
+# size
+docker images
+bat Dockerfile-6
+@_SKIPdocker tag golang:latest golang:1.14.2   # (cheating)
+docker build . -t hello -f Dockerfile-6
+docker images
+docker run hello "ninja dockerfilers"
