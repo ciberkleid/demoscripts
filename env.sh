@@ -34,15 +34,16 @@ export DEMO_SCRIPT="${demo_script_absolute_path}"
 export DEMO_FILES="${demo_files_absolute_path}"
 export DEMO_TEMP="${DEMO_HOME}/temp/${demo_script_handle}"
 # Default delay is 10. To make it faster, increase the number
-export DEMO_DELAY=15
+export DEMO_DELAY=${DEMO_DELAY:-10}
 export SAVED_DEMO_DELAY=${DEMO_DELAY}
 
 echo
-echo "### Setting env vars"
+echo "### Demo config (from args)"
 echo "DEMO_HOME=${DEMO_HOME}"
 echo "DEMO_TEMP=${DEMO_TEMP}"
 echo "DEMO_SCRIPT=${DEMO_SCRIPT}"
 echo "DEMO_FILES=${DEMO_FILES}"
+echo "### Demo config (from env)"
 echo "DEMO_COLOR=${DEMO_COLOR}"
 echo "DEMO_DELAY=${DEMO_DELAY}"
 echo "SAVED_DEMO_DELAY=${SAVED_DEMO_DELAY}"
