@@ -30,7 +30,6 @@ ls
 @_SKIPdu -hs * | sort -h
 @_ECHO_OFF
 export BAT_LANG_FLAG="-l exclude"
-
 @_ECHO_ON
 mv "${HELLO_FILES}"/.dockerignore .; bat .dockerignore
 @_ECHO_OFF
