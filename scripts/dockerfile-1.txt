@@ -21,12 +21,13 @@ ls
 # traditional
 go version
 go install
-ls -lrt $GOPATH/pkg/mod/*/* | tail -n1
-ls -ltr $GOPATH/bin | tail -n1
+@_SKIPls -lrt $GOPATH/pkg/mod/*/* | tail -n1
+@_SKIPls -ltr $GOPATH/bin | tail -n1
+find $GOPATH \( -name "strutil@*" -o -name hello \) -ls
 hello
 hello world
-hello world champions
-hello "world champions"
+hello world of wonders
+hello "world of wonders"
 @_SKIP# Talk about expectations of prod: same OS? package installed? binary in PATH?
 @_SKIP# Works on my machine... ¯\_(?)_/¯
 # Works on my machine... \_(?)_/
@@ -38,9 +39,8 @@ docker build . -t hello
 docker images
 docker run hello
 docker run hello hello
-docker run hello hello world
-docker run hello hello one and all
-docker run hello hello "one and all"
+docker run hello hello world of wonders
+docker run hello hello "world of wonders"
 @_SKIP# Guaranteed: same OS, package installed, binary in PATH
 
 clear
@@ -48,7 +48,7 @@ clear
 catd Dockerfile Dockerfile-1
 docker build . -t hello -f Dockerfile-1
 docker run hello
-docker run --init -e TINI_KILL_PROCESS_GROUP=1 hello one and all
+docker run --init -e TINI_KILL_PROCESS_GROUP=1 hello world of wonders
 
 clear
 # OS signals
@@ -62,7 +62,7 @@ export BAT_LANG_FLAG="-l Dockerfile"
 @_ECHO_ON
 docker build . -t hello -f Dockerfile-2
 docker run hello
-docker run hello one and all
+docker run hello world of wonders
 
 clear
 # layers/caching

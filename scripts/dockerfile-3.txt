@@ -6,8 +6,6 @@ dclean
 
 export BAT_LANG_FLAG="-l Dockerfile"
 
-@SKIP# LABELS ??????? ARGS ??? ENV ???
-
 # Set up java demo
 cd ${DEMO_TEMP}
 if [ ! -d cool-app ]; then git clone git@github.com:ciberkleid/cool-app; fi
@@ -19,7 +17,7 @@ if [ ! -f ./target/*.jar ]; then ./mvnw -Dmaven.repo.local=./.m2/repository clea
 # Package jar & extract (default)
 if [ ! -d temp-default ]; then mkdir -p temp-default; cd temp-default; jar -xf ../target/*.jar; cd ..; fi
 # Package jar & extract (layered)
-if [ ! -d temp-layered ]; then mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; cd ..; fi
+if [ ! -d temp-layered ]; then mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; mkdir -p snapshot-dependencies; cd ..; fi
 
 # Set up to start demo
 cd ${DEMO_TEMP}/cool-app
@@ -45,7 +43,7 @@ batd Dockerfile-1 Dockerfile-2
 @_SKIPdiff -u Dockerfile-1 Dockerfile-2 | delta
 export DOCKER_BUILDKIT=1
 docker build . -t cool-app -f Dockerfile-2     # --progress=plain
-sed -i '' 's/actuator/some-other-dep/g' pom.xml
+sed -i '' 's/starter-actuator/configuration-processor/g' pom.xml; git diff pom.xml
 docker build . -t cool-app -f Dockerfile-2
 
 @_SKIPclear
@@ -68,21 +66,23 @@ docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8
 @_SKIP# <Ctrl+C> in container process window to stop container
 
 clear
-# java unpack jar
-ls -l temp-default/*
+# unpack jar
+ls -l temp-default
 batd Dockerfile-3 Dockerfile-4
 
-@_SKIP# gravy: layered jar (Spring Boot 2.3.0.M1+)
+# unpack - Spring Boot 2.3.0
 @_SKIPcat pom.xml
-@_SKIPls -l temp-layered
+ls -l temp-layered
 @_SKIPhead temp-layered/application/BOOT-INF/layers.idx
 @_SKIPtail temp-layered/application/BOOT-INF/layers.idx
-@_SKIPbat Dockerfile-5
+batd Dockerfile-3 Dockerfile-5
 @_SKIPdocker build . -t cool-app -f Dockerfile-5
 @_SKIPcp demo/CoolAppController-hello.java src/main/java/io/pivotal/coolapp/CoolAppController.java
 @_SKIPdocker build . -t cool-app -f Dockerfile-5
 @_SKIPdocker history cool-app
 @_SKIPdocker run -p 8080:8080 cool-app
+
+@_SKIP# LABELS ??????? ARGS ??? ENV ???
 
 @_SKIP# args, choice of image
 @_SKIPbat Dockerfile-6
