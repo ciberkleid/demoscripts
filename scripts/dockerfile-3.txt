@@ -17,9 +17,9 @@ if [ ! -d ./.m2/repository ]; then ./mvnw -Dmaven.repo.local=./.m2/repository de
 # Build jar (assume default config is layered)
 if [ ! -f ./target/*.jar ]; then ./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests; fi
 # Package jar & extract (default)
-if [[ -d temp-default ]]; then mkdir -p temp-default; cd temp-default; jar -xf ../target/*.jar; cd ..; fi
+if [ ! -d temp-default ]; then mkdir -p temp-default; cd temp-default; jar -xf ../target/*.jar; cd ..; fi
 # Package jar & extract (layered)
-if [[ -d temp-layered ]]; then mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; cd ..; fi
+if [ ! -d temp-layered ]; then mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; cd ..; fi
 
 # Set up to start demo
 cd ${DEMO_TEMP}/cool-app
