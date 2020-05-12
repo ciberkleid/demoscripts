@@ -6,30 +6,25 @@ dclean
 
 export BAT_LANG_FLAG="-l Dockerfile"
 
+@SKIP# LABELS ??????? ARGS ??? ENV ???
+
 # Set up java demo
-@_SKIPdocker pull adoptopenjdk:11-jdk-hotspot
-@_SKIPdocker pull adoptopenjdk:11-jre-hotspot
 cd ${DEMO_TEMP}
 if [ ! -d cool-app ]; then git clone git@github.com:ciberkleid/cool-app; fi
 cd cool-app
 # Install dependencies into a repo in the context
 if [ ! -d ./.m2/repository ]; then ./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline; fi
+# Build jar (assume default config is layered)
+if [ ! -f ./target/*.jar ]; then ./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests; fi
 # Package jar & extract (default)
-if [[ -d temp-default ]]; then skip=true; else skip=false; fi
-if [ $skip = false ]; then ./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests; fi
-if [ $skip = false ]; then mkdir -p temp-default; cd temp-default; jar -xf ../target/*.jar; cd ..; fi
+if [[ -d temp-default ]]; then mkdir -p temp-default; cd temp-default; jar -xf ../target/*.jar; cd ..; fi
 # Package jar & extract (layered)
-if [[ -d temp-layered ]]; then skip=true; else skip=false; fi
-if [ $skip = false ]; then ./mvnw -Dmaven.repo.local=./.m2/repository clean package -DskipTests -P layered; fi
-if [ $skip = false ]; then mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; cd ..; fi
+if [[ -d temp-layered ]]; then mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; cd ..; fi
 
 # Set up to start demo
 cd ${DEMO_TEMP}/cool-app
-rm Dockerfile*
-rm *.dockerignore*
-# Copy everything, including hidden files
-cp -r ${DEMO_FILES}/cool-app/. .
-cp pom-no-actuator.xml pom.xml
+# Copy Dockerfiles and .dockerignore file
+cp -r Dockerfiles/. .
 clear
 
 @_ECHO_ON
@@ -50,17 +45,8 @@ batd Dockerfile-1 Dockerfile-2
 @_SKIPdiff -u Dockerfile-1 Dockerfile-2 | delta
 export DOCKER_BUILDKIT=1
 docker build . -t cool-app -f Dockerfile-2     # --progress=plain
-colordiff pom.xml pom-actuator.xml
-cp pom-actuator.xml pom.xml
+sed -i '' 's/actuator/some-other-dep/g' pom.xml
 docker build . -t cool-app -f Dockerfile-2
-
-clear
-# security
-@_SKIPdocker exec cool-app whoami       # for a running container
-docker run --entrypoint /bin/sh cool-app -c whoami
-batd Dockerfile-2 Dockerfile-3
-docker build . -t cool-app -f Dockerfile-3
-docker run -it --entrypoint /bin/sh cool-app
 
 @_SKIPclear
 @_SKIP# bind mount
@@ -75,8 +61,8 @@ clear
 docker run -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8081
 docker run -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app
 # JAVA_TOOL_OPTIONS will work
-colordiff Dockerfile-3 Dockerfile-4
-docker build . -t cool-app -f Dockerfile-4
+colordiff Dockerfile-2 Dockerfile-3
+docker build . -t cool-app -f Dockerfile-3
 docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8081
 @_SKIP# http localhost:8081 # In a different window
 @_SKIP# <Ctrl+C> in container process window to stop container
@@ -84,19 +70,19 @@ docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8
 clear
 # java unpack jar
 ls -l temp-default/*
-batd Dockerfile-4 Dockerfile-5
+batd Dockerfile-3 Dockerfile-4
 
 @_SKIP# gravy: layered jar (Spring Boot 2.3.0.M1+)
 @_SKIPcat pom.xml
 @_SKIPls -l temp-layered
 @_SKIPhead temp-layered/application/BOOT-INF/layers.idx
 @_SKIPtail temp-layered/application/BOOT-INF/layers.idx
-@_SKIPbat Dockerfile-6
-@_SKIPdocker build . -t cool-app -f Dockerfile-6
+@_SKIPbat Dockerfile-5
+@_SKIPdocker build . -t cool-app -f Dockerfile-5
 @_SKIPcp demo/CoolAppController-hello.java src/main/java/io/pivotal/coolapp/CoolAppController.java
-@_SKIPdocker build . -t cool-app -f Dockerfile-6
+@_SKIPdocker build . -t cool-app -f Dockerfile-5
 @_SKIPdocker history cool-app
 @_SKIPdocker run -p 8080:8080 cool-app
 
 @_SKIP# args, choice of image
-@_SKIPbat Dockerfile-7
+@_SKIPbat Dockerfile-6

@@ -43,6 +43,7 @@ catd Dockerfile-3 Dockerfile-4
 docker build . -t hello -f Dockerfile-4
 docker run -it --entrypoint /bin/sh hello
 
+clear
 # tagging
 @_SKIPecho -ne "FROM golang\nLABEL find=me" | docker build . -t demo:1.6 -t demo:1 -t demo -f-
 @_SKIPdocker images --filter "label=find=me"
@@ -53,6 +54,7 @@ docker build . -f Dockerfile-4 -t hello -t hello:1 -t hello:1.7
 docker images | grep hello
 batd Dockerfile-4 Dockerfile-5
 
+clear
 # size
 docker images
 bat Dockerfile-6

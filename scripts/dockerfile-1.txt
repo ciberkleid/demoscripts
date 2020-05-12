@@ -28,11 +28,11 @@ hello world
 hello world champions
 hello "world champions"
 @_SKIP# Talk about expectations of prod: same OS? package installed? binary in PATH?
-# Works on my machine... ¯\_(?)_/¯
+@_SKIP# Works on my machine... ¯\_(?)_/¯
+# Works on my machine... \_(?)_/
 
-clear
+cp ../Dockerfiles/* .; clear
 # containerize
-cp ../Dockerfiles/* .
 bat Dockerfile
 docker build . -t hello
 docker images
@@ -43,13 +43,14 @@ docker run hello hello one and all
 docker run hello hello "one and all"
 @_SKIP# Guaranteed: same OS, package installed, binary in PATH
 
+clear
 # launch behavior
 catd Dockerfile Dockerfile-1
 docker build . -t hello -f Dockerfile-1
 docker run hello
-#
 docker run --init -e TINI_KILL_PROCESS_GROUP=1 hello one and all
 
+clear
 # OS signals
 bat Dockerfile-2
 @_ECHO_OFF
@@ -63,7 +64,8 @@ docker build . -t hello -f Dockerfile-2
 docker run hello
 docker run hello one and all
 
-@_SKIP# layers/caching
+clear
+# layers/caching
 docker images
 docker history hello
 bat Dockerfile-2
