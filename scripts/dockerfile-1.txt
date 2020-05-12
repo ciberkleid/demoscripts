@@ -14,26 +14,11 @@ cd hello-go/src
 unset HELLO_ARG
 
 # Start demo
+cp ../Dockerfiles/Dockerfile .
 clear
 @_ECHO_ON
 
 ls
-# traditional
-go version
-go install
-@_SKIPls -lrt $GOPATH/pkg/mod/*/* | tail -n1
-@_SKIPls -ltr $GOPATH/bin | tail -n1
-find $GOPATH \( -name "strutil@*" -o -name hello \) -ls
-hello
-hello world
-hello world of wonders
-hello "world of wonders"
-@_SKIP# Talk about expectations of prod: same OS? package installed? binary in PATH?
-@_SKIP# Works on my machine... ¯\_(?)_/¯
-# Works on my machine... \_(?)_/
-
-cp ../Dockerfiles/* .; clear
-# containerize
 bat Dockerfile
 docker build . -t hello
 docker images
@@ -43,7 +28,7 @@ docker run hello hello world of wonders
 docker run hello hello "world of wonders"
 @_SKIP# Guaranteed: same OS, package installed, binary in PATH
 
-clear
+cp ../Dockerfiles/* .; clear
 # launch behavior
 catd Dockerfile Dockerfile-1
 docker build . -t hello -f Dockerfile-1
@@ -53,15 +38,7 @@ docker run --init -e TINI_KILL_PROCESS_GROUP=1 hello world of wonders
 clear
 # OS signals
 bat Dockerfile-2
-@_ECHO_OFF
-export BAT_LANG_FLAG="-l sh"
-@_ECHO_ON
-bat run.sh
-@_ECHO_OFF
-export BAT_LANG_FLAG="-l Dockerfile"
-@_ECHO_ON
 docker build . -t hello -f Dockerfile-2
-docker run hello
 docker run hello world of wonders
 
 clear
