@@ -1,5 +1,5 @@
 @_ECHO_OFF
-tabname dockerfile-master
+tabname dockerfile-go
 SAVED_DEMO_DELAY=${DEMO_DELAY}
 export BAT_LANG_FLAG="-l Dockerfile"
 export DOCKER_BUILDKIT=0
@@ -47,9 +47,10 @@ docker run hello hello "one and all"
 catd Dockerfile Dockerfile-1
 docker build . -t hello -f Dockerfile-1
 docker run hello
+#
 docker run --init -e TINI_KILL_PROCESS_GROUP=1 hello one and all
 
-# Linux signals
+# OS signals
 bat Dockerfile-2
 @_ECHO_OFF
 export BAT_LANG_FLAG="-l sh"
@@ -71,43 +72,3 @@ bat Dockerfile-3
 time docker build . -t hello -f Dockerfile-3 --no-cache
 sed -i '' 's/Hello/Greetings/g' hello.go
 time docker build . -t hello -f Dockerfile-3
-
-# context
-@_SKIPecho -e "FROM golang" | docker build . -t demo -f-
-@_SKIPdu -hs * | sort -h
-ls
-cp ../Dockerfiles/.dockerignore .
-@_ECHO_OFF
-export BAT_LANG_FLAG="-l exclude"
-@_ECHO_ON
-bat .dockerignore
-@_SKIPecho -e "FROM golang" | docker build . -t demo -f-
-@_ECHO_OFF
-export BAT_LANG_FLAG="-l Dockerfile"
-@_ECHO_ON
-
-clear
-# security
-@_SKIPdocker exec <image-name> whoami       # for a running container
-docker run --entrypoint /bin/sh hello -c "whoami; pwd; ls -l"
-catd Dockerfile-3 Dockerfile-4
-docker build . -t hello -f Dockerfile-4
-docker run -it --entrypoint /bin/sh hello
-
-# tagging
-@_SKIPecho -ne "FROM golang\nLABEL find=me" | docker build . -t demo:1.6 -t demo:1 -t demo -f-
-@_SKIPdocker images --filter "label=find=me"
-docker build . -f Dockerfile-4 -t hello -t hello:1 -t hello:1.6
-docker images | grep hello
-sed -i '' 's/world/worlds/g' Dockerfile-4
-docker build . -f Dockerfile-4 -t hello -t hello:1 -t hello:1.7
-docker images | grep hello
-batd Dockerfile-4 Dockerfile-5
-
-# size
-docker images
-bat Dockerfile-6
-@_SKIPdocker tag golang:latest golang:1.14.2   # (cheating)
-docker build . -t hello -f Dockerfile-6
-docker images
-docker run hello "ninja dockerfilers"
