@@ -104,7 +104,7 @@ fi
 # Stop running containers & prune images, containers, volumes, and networks (stopped,unused, and dangling)
 alias dclean="docker ps -a -q | xargs -n1 docker stop; docker system prune -af"
 # Remove all containers; prune dangling images; prune images, containers, volumes, and networks with specified label
-alias dclean2="docker ps -a -q | xargs -n1 docker rm -f; docker image prune -f; docker system prune -af --filter label=com.example"
+alias dclean2="docker ps -a -q | xargs -n1 docker rm -f; docker image prune -f; docker system prune -af --filter label=maintainer=me@example.com"
 
 # Rename Terminal tabs
 tabname() { printf '\e]1;%s\a' $1; }
