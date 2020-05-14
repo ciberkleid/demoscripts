@@ -1,0 +1,49 @@
+@_SKIPecho "### Installing kpack and kpack logs CLI"
+@_SKIPkubectl apply -f https://github.com/pivotal/kpack/releases/download/v0.0.8/release-0.0.8.yaml
+@_SKIPcurl -L https://github.com/pivotal/kpack/releases/download/v0.0.8/logs-v0.0.8-macos.tgz | tar zx && \
+@_SKIP    chmod +x logs && \
+@_SKIP    mv logs ~/opt/logs
+@_SKIPecho "### Finished installing kpack and kpack logs CLI"
+
+@_SKIPecho "### Installing pbdemo"
+curl -L https://github.com/matthewmcnew/pbdemo/releases/download/v0.1.0/pbdemo-macos.tgz | tar zx && \
+    chmod +x pbdemo && \
+    mv pbdemo ~/opt/pbdemo
+@_SKIPecho "### Finished installing pbdemo"
+
+@_ECHO_ON
+# Get visualization of images in kpack cluster
+pbdemo serve
+@_SKIP# open http://localhost:8080
+# Populate image registry for demo
+##### Adds builder and run images, as well as a specified number of sample build service image configurations
+docker login
+pbdemo populate --registry docker.io/ciberkleid --count 20
+# For GCR: pbdemo populate --registry gcr.io/fe-ciberkleid --count 20
+# Check http://localhost:8080 (wait until all green)
+
+# STACK UPDATE
+# Copy the stack id from any box (the truncated if on the main UI or click on any box and copy the stack (run image).
+# Click Setup and copy it there --> visualizer highlights in red all images with this stack
+# Update the stack:
+pbdemo update-stack
+# Back to UI, watch  build service REBASE images
+
+# LOGS DEMO
+# pbdemo logs <image-name> e.g.:
+pbdemo logs wild-glade
+
+# BUILDPACK UPDATE
+# Copy Buildpack ID and Buildpack Version from one of the boxes on the web UI
+ # Click Setup and copy it there (e.g. paketo-buildpacks/node-engine AND 0.0.178) -->  --> visualizer highlights in red all images with this buildpack
+# Update the buildpack using pbdemo update-buildpacks --buildpack <buildpack-id> e.g:
+pbdemo update-buildpacks --buildpack paketo-buildpacks/nodejs
+# Back to UI, watch build service REBUILD images
+
+# CLEANUP
+@_SKIP# Reset your kpack builder, stack, and store resources to their previous state before using pbdemo
+pbdemo cleanup
+
+# LOGS DEMO
+# pbdemo logs <image-name> e.g.:
+pbdemo logs wild-glade

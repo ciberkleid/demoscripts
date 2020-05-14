@@ -1,0 +1,28 @@
+@_ECHO_OFF
+tabname kpack
+SAVED_DEMO_DELAY=${DEMO_DELAY}
+
+export BAT_LANG_FLAG="-l YAML"
+
+@_SKIPecho "### Installing kpack and kpack logs CLI"
+@_SKIPkubectl apply -f https://github.com/pivotal/kpack/releases/download/v0.0.8/release-0.0.8.yaml
+@_SKIPcurl -L https://github.com/pivotal/kpack/releases/download/v0.0.8/logs-v0.0.8-macos.tgz | tar zx && \
+@_SKIP    chmod +x logs && \
+@_SKIP    mv logs ~/opt/logs
+@_SKIPecho "### Finished installing kpack and kpack logs CLI"
+
+# Start demo
+@_ECHO_ON
+
+kubectl api-resources --api-group build.pivotal.io
+bat kpack/default-clusterbuilder.yaml
+bat kpack/image-cool-app.yaml
+printf "#" >> bump; git add bump; git commit -m "bump commit id"; git push
+@_ECHO_OFF
+cd ${DEMO_HOME}
+@_ECHO_ON
+kubectl get builds -n kpack-builds
+logs -namespace kpack-builds -image cool-app
+
+# After an image or a build executes, show status information using: kubectl get <image-name> or kubectl describe <image-name>
+

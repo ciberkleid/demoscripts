@@ -18,7 +18,7 @@
 
     Place scripts and supporting files in the corresponding subdirectories, as show in the example below:
     
-    demoscripts/scripts/**mydemo**.txt
+    demoscripts/demos/**mydemo**.txt
     
     demoscripts/files/**mydemo**
 
@@ -27,8 +27,8 @@
 To execute a demo script, run the following commands:
 
     ```
-    source env.sh scripts/mydemo.txt
-    source demorunner.sh scripts/mydemo.txt
+    source setup.sh demos/mydemo.txt
+    source demorunner.sh demos/mydemo.txt
     ```
    
    The script will create a temp directory to execute the demo script:

@@ -1,0 +1,10 @@
+apiVersion: build.pivotal.io/v1alpha1
+kind: ClusterBuilder
+metadata:
+  name: demo-builder
+  namespace: kpack-builds
+spec:
+  image: ciberkleid/paketo-builder:base-platform-api-0.3
+  imagePullSecrets:
+    - name: dockerhub-secret
+  updatePolicy: polling   # polling (every 5 min) is default. Use external for manual updates

@@ -3,7 +3,7 @@
 
 # Edit it: update value of lineHighlight to #F8EEC7
 
-# To set it (done in env.sh):
+# To set it (done in setup.sh):
 #mkdir -p "$(bat --config-dir)/themes"
 # Copy theme file to config themes directory just created
 #bat cache --build

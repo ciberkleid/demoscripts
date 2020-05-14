@@ -1,3 +1,36 @@
+env GODEBUG=schedtrace=1000 hello
+
+
+ls
+# traditional
+go version
+go install
+@_SKIPls -lrt $GOPATH/pkg/mod/*/* | tail -n1
+@_SKIPls -ltr $GOPATH/bin | tail -n1
+find $GOPATH \( -name "strutil@*" -o -name hello \) -ls
+hello
+hello world
+hello world of wonders
+hello "world of wonders"
+@_SKIP# Talk about expectations of prod: same OS? package installed? binary in PATH?
+@_SKIP# Works on my machine... ¯\_(?)_/¯
+# Works on my machine... \_(?)_/
+
+
+
+docker run -e HELLO_SLEEP=1 --name hi --rm --entrypoint hello hello-img there # Ctrl+C OK
+docker run -e HELLO_SLEEP=1 --name hi --rm -d --entrypoint hello hello-img there
+docker exec hi ps -eaf
+# launch with shell
+docker run -e HELLO_SLEEP=1 --name hi --rm --entrypoint sh hello-img -c "hello there" # Ctrl+C Not OK
+# elevate with exec
+docker run -e HELLO_SLEEP=1 --name hi --rm --entrypoint sh hello-img -c "exec hello there" # Ctrl+C OK
+# exec doesn't always work
+docker run --name hi --rm --entrypoint sleep hello-img 15 # Ctrl+C Not OK, even as PID 1
+# use tini
+docker run --name hi --rm --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 15 # Ctrl+C OK
+
+
 
 https://gitlab.com/kalilinux/build-scripts/kali-docker/-/blob/28222a5ee0946c9dacc4b7cb988412a450b53c82/Dockerfile
 https://groups.google.com/a/opencontainers.org/forum/#!topic/dev/qYM84b0vays
@@ -9,7 +42,10 @@ LABEL org.opencontainers.image.version=$VERSION \
       org.opencontainers.image.authors="Kali Developers <devel@kali.org>"
 
 
+@_SKIPCGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o hello
+@_SKIPGOOS=linux go build hello.go; ls
 
+@_SKIPdu -hs * | sort -h
 
 return
 ----------------

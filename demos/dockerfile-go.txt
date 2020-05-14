@@ -33,26 +33,25 @@ docker run hello-img
 docker run hello-img sunshine
 @_SKIP# Guaranteed: same OS, package installed, binary in PATH
 
-# tagging
 cp ../Dockerfiles/* .
+
+# tagging
 batd Dockerfile Dockerfile-1
 docker build . -t hello-img -t hello-img:1 -t hello-img:1.6
 docker images | grep hello
 sed -i '' 's/world/sunshine/g' Dockerfile
 docker build . -t hello-img -t hello-img:1 -t hello-img:1.7
 docker images | grep hello
-docker run hello-img:1.6
-docker run hello-img:1
 
-@_SKIPdocker system prune -af --filter "label=maintainer=me@example.com"
-docker image prune -af --filter "label=maintainer=me@example.com"
-@_SKIPdocker rmi $(docker images 'hello-img' -q)
+docker rmi $(docker images 'hello-img' -q)
+docker system prune -af --filter "label=maintainer=me@example.com"
+@_SKIPdocker image prune -af --filter "label=maintainer=me@example.com"
 @_SKIPdocker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'hello-img')
 
 # build context
 cp ../big-secret-file .
 @_SKIPdu -hs * | sort -h
-docker build . -t hello-img | grep Sending
+docker build . -t hello-img
 docker run --rm --entrypoint /bin/sh hello-img -c "ls -l"
 @_ECHO_OFF
 export BAT_LANG_FLAG="-l exclude"
@@ -85,27 +84,26 @@ docker run --rm --name hi --entrypoint sleep hello-img 10
 docker run --rm --name hi --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 30
 
 # tini in image
-bat Dockerfile-5
+bat Dockerfile-4
 
 # layers/caching
 docker images
 docker history hello-img
+bat Dockerfile-4
 bat Dockerfile-5
-bat Dockerfile-6
 @_SKIP# Talk about COPY command location, OS package commands, single command for dependencies and source
-time docker build . -t hello-img -f Dockerfile-6 --no-cache
+time docker build . -t hello-img -f Dockerfile-5 --no-cache
 sed -i '' 's/Hello/Greetings/g' hello.go
-time docker build . -t hello-img -f Dockerfile-6
+time docker build . -t hello-img -f Dockerfile-5
 
 # shell launch explained
-cat Dockerfile-6 | grep ^ENTRY
+cat Dockerfile-5 | grep ^ENTRY
 go run hello.go one and all
-go run hello.go "one and all"
 docker run --rm hello-img one and all
 
 # size
 docker images
-bat Dockerfile-7
-docker build . -t hello-img -f Dockerfile-7
+bat Dockerfile-6
+docker build . -t hello-img -f Dockerfile-6
 docker images
-docker run --rm hello "dockerfiler ninjas"
+docker run --rm hello-img "dockerfile ninjas"

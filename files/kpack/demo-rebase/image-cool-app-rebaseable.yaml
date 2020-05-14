@@ -1,0 +1,30 @@
+apiVersion: build.pivotal.io/v1alpha1
+kind: Image
+metadata:
+  name: cool-app-rebaseable
+  namespace: kpack-builds
+spec:
+  tag: ciberkleid/cool-app:kpack-rebase-demo-latest
+  serviceAccount: kpack-service-account
+  cacheSize: "1.5Gi" # Optional, if not set then the caching feature is disabled
+  failedBuildHistoryLimit: 5 # Optional, if not present defaults to 10
+  successBuildHistoryLimit: 5 # Optional, if not present defaults to 10
+  builder:
+    name: custom-java-builder
+    kind: CustomBuilder
+  source:   # also supports blob (e.g. jar) and registry (code in an image)
+    git:
+      url: https://github.com/ciberkleid/cool-app
+      revision: master
+#    subPath: #A subdirectory within the source folder where application code resides. Can be ignored if the source code resides at the root level.
+  build: # Optional
+    env:
+      - name: BP_OCI_AUTHORS
+        value: me@example.com
+#    resources:
+#      limits:
+#        cpu: 100m
+#        memory: 1G
+#      requests:
+#        cpu: 50m
+#        memory: 512M

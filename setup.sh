@@ -1,19 +1,57 @@
 # Usage example:
-# source env.sh scripts/dockerfile-1.txt files/dockerfile
-# source demorunner.sh scripts/dockerfile-1.txt
+# source setup.sh demos/dockerfile-1.txt files/dockerfile
+# source demorunner.sh demos/dockerfile-1.txt
 
 # brew install coreutils (for greadlink)
 
+# Default values of arguments
 demo_script=""
 demo_files=""
+force_cleanup_enabled=0
 
-if [ ! -f "${1}" ]; then
-  echo "File does not exist: [${1}]"
-  kill -INT $$
+# Check number of arguments
+if [ "$#" -gt 3 ]; then
+    echo "Illegal number of arguments"
+    echo "Usage:"
+    echo "source setup.sh <script_file> <files_dir> [-f]"
+    echo "Note: -f is optional and forces deletion and recreation of demo temp directory"
+    kill -INT $$
+fi
+
+# Check for a "-f" boolean flag to enable forced cleanup and avoid being prompted
+# Inspired by: https://pretzelhands.com/posts/command-line-flags
+for arg in "$@"
+do
+    case $arg in
+        -f|--force)
+        force_cleanup_enabled=1
+        shift # Remove --initialize from processing
+        ;;
+        *)
+        if [[ "${demo_script}" == "" ]]; then
+          demo_script="${1}"
+          if [ ! -f "${demo_script}" ]; then
+            echo "File does not exist: [${demo_script}]"
+            kill -INT $$
+          fi
+        elif [[ "${demo_files}" == "" ]]; then
+          demo_files="${1}"
+          if [ ! -d "${demo_files}" ]; then
+            echo "Directory does not exist: [${demo_files}]"
+            kill -INT $$
+          fi
+        fi
+        shift
+        ;;
+    esac
+done
+
+demo_script_absolute_path=$(greadlink -f "${demo_script}")
+demo_script_handle=$(echo $(basename "${demo_script}") | cut -d. -f1)
+if [[ "${demo_files}" != "" ]]; then
+  demo_files_absolute_path=$(greadlink -f "${demo_files}")
 else
-  demo_script="${1}"
-  demo_script_absolute_path=$(greadlink -f "${demo_script}")
-  demo_script_handle=$(echo $(basename "${demo_script}") | cut -d. -f1)
+  demo_files_absolute_path=""
 fi
 
 if [ $# -gt 1 ]; then
@@ -22,7 +60,7 @@ if [ $# -gt 1 ]; then
     kill -INT $$
   else
     demo_files="${2}"
-    demo_files_absolute_path=$(greadlink -f "${demo_files}")
+
   fi
 else
   demo_files_absolute_path=""
@@ -70,19 +108,14 @@ if [ "$(ls -A ${DEMO_TEMP})" ]; then
   echo "Contents:"
   ls -la "${DEMO_TEMP}"
   echo
-  read -p "Keep or remove? [KP|rm] : " action
-  action="${action:-KP}"
-  if [[ "${action}" =~ rm|RM|Rm|rM ]]; then
-    echo "Removing temp directory ${DEMO_TEMP}"
-    rm -rf "${DEMO_TEMP}"
-  else
-    echo "Using existing temp directory ${DEMO_TEMP}"
-  fi
 fi
-if [ ! -d "${DEMO_TEMP}" ]; then
-  echo "Creating temp directory ${DEMO_TEMP}"
-  mkdir -p "${DEMO_TEMP}"
+if [ ${force_cleanup_enabled} -eq 1 ]; then
+  echo "Forced deletion is enabled. Recreating temp directory ${DEMO_TEMP}"
+  rm -rf "${DEMO_TEMP}"
+else
+  echo "Forced deletion is not enabled. Using existing temp directory ${DEMO_TEMP}"
 fi
+mkdir -p "${DEMO_TEMP}"
 
 ##### ALIASES
 
@@ -156,3 +189,9 @@ echo
 echo "Expanded form:"
 echo "cd ${DEMO_TEMP}; source demorunner.sh ${DEMO_SCRIPT} 1; cd ${DEMO_HOME}"
 echo
+
+#### Execute...
+
+cd "${DEMO_TEMP}"
+source demorunner.sh "${DEMO_SCRIPT}" 1
+cd "${DEMO_HOME}"
