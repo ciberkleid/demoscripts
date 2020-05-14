@@ -37,18 +37,6 @@ export DEMO_TEMP="${DEMO_HOME}/temp/${demo_script_handle}"
 export DEMO_DELAY=${DEMO_DELAY:-10}
 export SAVED_DEMO_DELAY=${DEMO_DELAY}
 
-echo
-echo "### Demo config (from args)"
-echo "DEMO_HOME=${DEMO_HOME}"
-echo "DEMO_TEMP=${DEMO_TEMP}"
-echo "DEMO_SCRIPT=${DEMO_SCRIPT}"
-echo "DEMO_FILES=${DEMO_FILES}"
-echo "### Demo config (from env)"
-echo "DEMO_COLOR=${DEMO_COLOR}"
-echo "DEMO_DELAY=${DEMO_DELAY}"
-echo "SAVED_DEMO_DELAY=${SAVED_DEMO_DELAY}"
-echo
-
 ##### APPEARANCE SETTINGS
 # https://github.com/sharkdp/bat
 #brew install bat
@@ -75,9 +63,6 @@ else
   fi
 fi
 
-# https://github.com/dandavison/delta
-#brew install git-delta
-
 ##### TEMP DIR
 
 if [ "$(ls -A ${DEMO_TEMP})" ]; then
@@ -100,6 +85,9 @@ if [ ! -d "${DEMO_TEMP}" ]; then
 fi
 
 ##### ALIASES
+
+# https://github.com/dandavison/delta
+#brew install git-delta
 
 # Stop running containers & prune images, containers, volumes, and networks (stopped, unused, and dangling)
 alias dclean="docker ps -a -q | xargs -n1 docker stop; docker system prune -af"
@@ -131,14 +119,35 @@ alias catd=catdf
 # END SECTION: Fancy cat and diff aliases
 
 # Generate args to highlight changed lines for bat
-BAT_LANG_FLAG="-l Dockerfile"
-batdf() { hArgs=$(diff --unchanged-line-format="" --old-line-format="" --new-line-format="%dn " ${1} ${2} | xargs -n1 -I {} printf -- '-H %s:%s ' {} {}); bat ${BAT_LANG_FLAG} ${2} $hArgs; }
+BATD_LANG="-l Dockerfile"
+batdf() { hArgs=$(diff --unchanged-line-format="" --old-line-format="" --new-line-format="%dn " ${1} ${2} | xargs -n1 -I {} printf -- '-H %s:%s ' {} {}); bat ${BATD_LANG} ${2} $hArgs; }
 alias batd=batdf
-alias bat="bat ${BAT_LANG_FLAG}"
+alias bat="bat ${BATD_LANG}"
+# Note: BATD_LANG env var only affects batd dynamically. To change language for bat, unalias bat or recreate bat alias.
 
-#####  GUIDANCE
+#####  PRINT ENV VARS
+
+echo
+echo "### Demo config (from args)"
+echo "DEMO_HOME=${DEMO_HOME}"
+echo "DEMO_TEMP=${DEMO_TEMP}"
+echo "DEMO_SCRIPT=${DEMO_SCRIPT}"
+echo "DEMO_FILES=${DEMO_FILES}"
+echo "### Demo config (from env)"
+echo "DEMO_DELAY=${DEMO_DELAY}"
+echo "SAVED_DEMO_DELAY=${SAVED_DEMO_DELAY}"
+echo "DEMO_COLOR=${DEMO_COLOR}"
+echo "BAT_STYLE=${BAT_STYLE}"
+echo "BAT_PAGER=${BAT_PAGER}"
+echo "BAT_THEME=${BAT_THEME}"
+echo "BATD_LANG=${BATD_LANG}"
+echo "$(alias bat) ## unalias bat or recreate alias to change"
+
+#####  ENV SETUP IS DONE
+#####  PROVIDE COMMAND FOR STARTING DEMO SCRIPT
 
 command="cd \${DEMO_TEMP}; source demorunner.sh \${DEMO_SCRIPT} 1; cd \${DEMO_HOME}"
+
 printf "${command}" | pbcopy
 echo
 echo "Execute the following command (it's in your clipboard!):"
