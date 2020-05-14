@@ -1,8 +1,5 @@
 @_ECHO_OFF
-SAVED_DEMO_DELAY=${DEMO_DELAY}
 dclean
-
-unalias bat
 
 cd ${DEMO_TEMP}
 if [ ! -d java-app ]; then git clone git@github.com:ciberkleid/cool-app java-app; fi

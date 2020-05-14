@@ -1,13 +1,7 @@
 @_ECHO_OFF
-DEMO_HOME=`pwd`
-DEMO_FILES=${DEMO_HOME}/demos/jib
-DEMO_TEMP=${DEMO_HOME}/temp/jib
-source ${DEMO_HOME}/demos/aliases.sh
-rm -rf ${DEMO_TEMP}
-mkdir -p ${DEMO_TEMP}
-cd ${DEMO_TEMP}
 export DOCKER_BUILDKIT=0
 dclean
+
 # Set up
 git clone git@github.com:ciberkleid/cool-app
 cd cool-app

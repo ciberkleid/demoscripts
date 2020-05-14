@@ -1,6 +1,5 @@
 env GODEBUG=schedtrace=1000 hello
 
-
 ls
 # traditional
 go version
@@ -15,8 +14,6 @@ hello "world of wonders"
 @_SKIP# Talk about expectations of prod: same OS? package installed? binary in PATH?
 @_SKIP# Works on my machine... ¯\_(?)_/¯
 # Works on my machine... \_(?)_/
-
-
 
 docker run -e HELLO_SLEEP=1 --name hi --rm --entrypoint hello hello-img there # Ctrl+C OK
 docker run -e HELLO_SLEEP=1 --name hi --rm -d --entrypoint hello hello-img there

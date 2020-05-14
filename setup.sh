@@ -72,7 +72,7 @@ export DEMO_SCRIPT="${demo_script_absolute_path}"
 export DEMO_FILES="${demo_files_absolute_path}"
 export DEMO_TEMP="${DEMO_HOME}/temp/${demo_script_handle}"
 # Default delay is 10. To make it faster, increase the number
-export DEMO_DELAY=${DEMO_DELAY:-10}
+export DEMO_DELAY=${DEMO_DELAY:-15}
 export SAVED_DEMO_DELAY=${DEMO_DELAY}
 
 ##### APPEARANCE SETTINGS
@@ -152,11 +152,18 @@ alias catd=catdf
 # END SECTION: Fancy cat and diff aliases
 
 # Generate args to highlight changed lines for bat
-BATD_LANG="-l Dockerfile"
+BATD_LANG=""
 batdf() { hArgs=$(diff --unchanged-line-format="" --old-line-format="" --new-line-format="%dn " ${1} ${2} | xargs -n1 -I {} printf -- '-H %s:%s ' {} {}); bat ${BATD_LANG} ${2} $hArgs; }
 alias batd=batdf
-alias bat="bat ${BATD_LANG}"
-# Note: BATD_LANG env var only affects batd dynamically. To change language for bat, unalias bat or recreate bat alias.
+setBatLangf() { export BATD_LANG="-l ${1}"; alias bat="bat ${BATD_LANG}"; }
+alias setBatLang=setBatLangf
+# Usage example:
+# setBatLang Dockerfile
+# bat Dockerfile
+# batd Dockerfile Dockerfile2
+# setBatLang exclude
+# bat .dockerignore
+# batd .dockerignore .dockerignore2
 
 #####  PRINT ENV VARS
 
@@ -173,8 +180,8 @@ echo "DEMO_COLOR=${DEMO_COLOR}"
 echo "BAT_STYLE=${BAT_STYLE}"
 echo "BAT_PAGER=${BAT_PAGER}"
 echo "BAT_THEME=${BAT_THEME}"
-echo "BATD_LANG=${BATD_LANG}"
-echo "$(alias bat) ## unalias bat or recreate alias to change"
+echo "BATD_LANG=${BATD_LANG}   # to change, use: setBatLang <language>"
+echo "$(alias bat)             # to change, use: setBatLang <language>"
 
 #####  ENV SETUP IS DONE
 #####  PROVIDE COMMAND FOR STARTING DEMO SCRIPT

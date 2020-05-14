@@ -1,10 +1,7 @@
 @_ECHO_OFF
-tabname dockerfile-3
 export DOCKER_BUILDKIT=0
-SAVED_DEMO_DELAY=${DEMO_DELAY}
 dclean
-
-export BAT_LANG_FLAG="-l Dockerfile"
+setBatLang Dockerfile
 
 # Set up java demo
 cd ${DEMO_TEMP}
@@ -29,11 +26,11 @@ clear
 @_SKIP# review
 bat Dockerfile-1
 @_ECHO_OFF
-export BAT_LANG_FLAG="-l exclude"
+setBatLang exclude
 @_ECHO_ON
 bat .dockerignore
 @_ECHO_OFF
-export BAT_LANG_FLAG="-l Dockerfile"
+setBatLang Dockerfile
 @_ECHO_ON
 clear
 

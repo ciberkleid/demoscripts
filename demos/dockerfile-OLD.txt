@@ -1,8 +1,7 @@
 @_ECHO_OFF
-tabname dockerfile
 export DOCKER_BUILDKIT=0
 dclean
-SAVED_DEMO_DELAY=${DEMO_DELAY}
+setBatLang Dockerfile
 
 # Set up go demo
 mkdir -p ${DEMO_TEMP}/hello-go

@@ -1,8 +1,6 @@
 @_ECHO_OFF
-tabname kpack
-SAVED_DEMO_DELAY=${DEMO_DELAY}
 
-export BAT_LANG_FLAG="-l YAML"
+setBatLang YAML
 
 @_SKIPecho "### Installing kpack and kpack logs CLI"
 @_SKIPkubectl apply -f https://github.com/pivotal/kpack/releases/download/v0.0.8/release-0.0.8.yaml
