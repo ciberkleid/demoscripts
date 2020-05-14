@@ -2,8 +2,6 @@
 # source setup.sh demos/dockerfile-1.txt files/dockerfile
 # source demorunner.sh demos/dockerfile-1.txt
 
-# brew install coreutils (for greadlink)
-
 # Default values of arguments
 demo_script=""
 demo_files=""
@@ -18,6 +16,7 @@ if [ "$#" -gt 3 ]; then
     kill -INT $$
 fi
 
+# Process arguments
 # Check for a "-f" boolean flag to enable forced cleanup and avoid being prompted
 # Inspired by: https://pretzelhands.com/posts/command-line-flags
 for arg in "$@"
@@ -46,6 +45,9 @@ do
     esac
 done
 
+echo -e "\n\n##### SETTING UP DEMO ["${demo_script}"] [$(date)] #####"
+
+# brew install coreutils (for greadlink)
 demo_script_absolute_path=$(greadlink -f "${demo_script}")
 demo_script_handle=$(echo $(basename "${demo_script}") | cut -d. -f1)
 if [[ "${demo_files}" != "" ]]; then
@@ -54,6 +56,7 @@ else
   demo_files_absolute_path=""
 fi
 
+# demo_files is optional; set absolute path to "" if demo_files was not provided
 if [ $# -gt 1 ]; then
   if [ ! -d "${2}" ]; then
     echo "Directory does not exist: [${2}]"
@@ -79,6 +82,7 @@ export SAVED_DEMO_DELAY=${DEMO_DELAY}
 # https://github.com/sharkdp/bat
 #brew install bat
 
+echo -e "\nSetting up bat utility"
 mkdir -p "$(bat --config-dir)/themes"
 cp config/bat/themes/*.tmTheme "$(bat --config-dir)/themes"
 bat cache --build
@@ -103,17 +107,16 @@ fi
 
 ##### TEMP DIR
 
+echo -e "\nSetting up temp dir [${DEMO_TEMP}]"
 if [ "$(ls -A ${DEMO_TEMP})" ]; then
-  echo "Temp dir is not empty [${DEMO_TEMP}]"
-  echo "Contents:"
-  ls -la "${DEMO_TEMP}"
-  echo
+  echo "Temp dir contents"
+  ls -l "${DEMO_TEMP}"
 fi
 if [ ${force_cleanup_enabled} -eq 1 ]; then
-  echo "Forced deletion is enabled. Recreating temp directory ${DEMO_TEMP}"
+  echo "Forced deletion is enabled. Recreating temp directory."
   rm -rf "${DEMO_TEMP}"
 else
-  echo "Forced deletion is not enabled. Using existing temp directory ${DEMO_TEMP}"
+  echo "Forced deletion is not enabled. Using existing temp directory."
 fi
 mkdir -p "${DEMO_TEMP}"
 
@@ -152,11 +155,12 @@ alias catd=catdf
 # END SECTION: Fancy cat and diff aliases
 
 # Generate args to highlight changed lines for bat
-BATD_LANG=""
-batdf() { hArgs=$(diff --unchanged-line-format="" --old-line-format="" --new-line-format="%dn " ${1} ${2} | xargs -n1 -I {} printf -- '-H %s:%s ' {} {}); bat ${BATD_LANG} ${2} $hArgs; }
+BAT_LANG=""
+batdf() { hArgs=$(diff --unchanged-line-format="" --old-line-format="" --new-line-format="%dn " ${1} ${2} | xargs -n1 -I {} printf -- '-H %s:%s ' {} {}); bat ${BAT_LANG} ${2} $hArgs; }
 alias batd=batdf
-setBatLangf() { export BATD_LANG="-l ${1}"; alias bat="bat ${BATD_LANG}"; }
+setBatLangf() { if [[ "${1}" == "" ]]; then export BAT_LANG=""; else export BAT_LANG="-l ${1}"; fi; alias bat="bat ${BAT_LANG}"; }
 alias setBatLang=setBatLangf
+setBatLang ""
 # Usage example:
 # setBatLang Dockerfile
 # bat Dockerfile
@@ -167,38 +171,34 @@ alias setBatLang=setBatLangf
 
 #####  PRINT ENV VARS
 
-echo
-echo "### Demo config (from args)"
+echo -e "\nDemo config:"
 echo "DEMO_HOME=${DEMO_HOME}"
 echo "DEMO_TEMP=${DEMO_TEMP}"
 echo "DEMO_SCRIPT=${DEMO_SCRIPT}"
 echo "DEMO_FILES=${DEMO_FILES}"
-echo "### Demo config (from env)"
 echo "DEMO_DELAY=${DEMO_DELAY}"
 echo "SAVED_DEMO_DELAY=${SAVED_DEMO_DELAY}"
 echo "DEMO_COLOR=${DEMO_COLOR}"
 echo "BAT_STYLE=${BAT_STYLE}"
 echo "BAT_PAGER=${BAT_PAGER}"
 echo "BAT_THEME=${BAT_THEME}"
-echo "BATD_LANG=${BATD_LANG}   # to change, use: setBatLang <language>"
-echo "$(alias bat)             # to change, use: setBatLang <language>"
+echo "BAT_LANG=${BAT_LANG}   # to change, use: setBatLang <language>"
 
-#####  ENV SETUP IS DONE
+echo -e "\nFinished setting up environment"
+
 #####  PROVIDE COMMAND FOR STARTING DEMO SCRIPT
-
 command="cd \${DEMO_TEMP}; source demorunner.sh \${DEMO_SCRIPT} 1; cd \${DEMO_HOME}"
-
 printf "${command}" | pbcopy
 echo
-echo "Execute the following command (it's in your clipboard!):"
+echo "To start the demo, execute the following command (it's in your clipboard!):"
 echo "cd \${DEMO_TEMP}; source demorunner.sh \${DEMO_SCRIPT} 1; cd \${DEMO_HOME}"
 echo
 echo "Expanded form:"
 echo "cd ${DEMO_TEMP}; source demorunner.sh ${DEMO_SCRIPT} 1; cd ${DEMO_HOME}"
 echo
 
-#### Execute...
-
+#### Execute automatically...
+echo -e "\nAutomatically executing demorunner.sh...\n"
 cd "${DEMO_TEMP}"
 source demorunner.sh "${DEMO_SCRIPT}" 1
 cd "${DEMO_HOME}"
