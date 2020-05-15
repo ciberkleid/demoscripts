@@ -4,24 +4,30 @@ dclean
 setBatLang Dockerfile
 
 # Set up demo files
-go clean -x -modcache
 if [ ! -d hello-go ]; then git clone git@github.com:ciberkleid/hello-go; fi
-cd hello-go/src
+cd hello-go
+
+echo "echo \"mwahaha!\"; return;"  > big-secret-file; base64 /dev/urandom | head -c 10000 >> big-secret-file
+cp Dockerfiles/Dockerfile src/
+cd src
 # To initialize, run: go mod init example.com/hello; go test
+go clean -x -modcache
 unset HELLO_ARG
+go run hello.go
 
 # Start demo
-cp ../Dockerfiles/Dockerfile .
-go run hello.go && cp $GOPATH/pkg/mod/github.com/ozgio/strutil@v0.3.0/LICENSE ../big-secret-file
+
+@SKIP ##### KUBEACADEMY - START PART 2
+
 clear
 @_ECHO_ON
 
 # sample app
-ls
+tree
 go run hello.go
 go run hello.go world
 
-# first build / launch app
+# first build / app startup
 bat Dockerfile
 docker build . -t hello-img
 clear
@@ -30,26 +36,22 @@ docker run hello-img
 docker run hello-img sunshine
 @_SKIP# Guaranteed: same OS, package installed, binary in PATH
 
-cp ../Dockerfiles/* .
-
 # tagging
+cp ../Dockerfiles/* .
 batd Dockerfile Dockerfile-1
-docker build . -t hello-img -t hello-img:1 -t hello-img:1.6
+docker build . -t hello-img:1.6 -t hello-img:1 -t hello-img
 docker images | grep hello
 sed -i '' 's/world/sunshine/g' Dockerfile
 docker build . -t hello-img -t hello-img:1 -t hello-img:1.7
 docker images | grep hello
 
-docker rmi $(docker images 'hello-img' -q)
-docker system prune -af --filter "label=maintainer=me@example.com"
-@_SKIPdocker image prune -af --filter "label=maintainer=me@example.com"
-@_SKIPdocker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'hello-img')
-
+clear
 # build context
 cp ../big-secret-file .
 @_SKIPdu -hs * | sort -h
 docker build . -t hello-img
-docker run --rm --entrypoint /bin/sh hello-img -c "ls -l"
+@_SKIP # Reminder: pwd; ls -l; whoami; rm *; ls -l;
+docker run --rm -it --entrypoint /bin/sh hello-img
 @_ECHO_OFF
 setBatLang exclude
 @_ECHO_ON
@@ -58,29 +60,30 @@ cp ../Dockerfiles/.dockerignore .; bat .dockerignore
 setBatLang Dockerfile
 @_ECHO_ON
 docker build . -t hello-img | grep Sending
-
-@_SKIPdocker exec <image-name> whoami       # for a running container
-docker run --rm --entrypoint /bin/sh hello-img -c "ls -l; whoami"
+docker run --rm --entrypoint /bin/sh hello-img -c "ls -l"
 
 # user
 batd Dockerfile-1 Dockerfile-2
 docker build . -t hello-img -f Dockerfile-2
-docker run --rm -it --entrypoint /bin/sh hello-img
+docker run --rm --entrypoint /bin/sh hello-img -c "id; rm -f *"
 
-# OS signals
+@SKIP ##### KUBEACADEMY - START PART 2
+clear
+
+# app shutdown (OS signals)
 bat Dockerfile-2 | grep ENTRY
-docker run --rm --name hi -e HELLO_SLEEP=1 hello-img
-# case 1: use shell to call responsible process
+docker run --rm -e HELLO_SLEEP=1 hello-img
+# bad listener (trapping)
+docker run --rm --entrypoint sleep hello-img 10
+# bad communicator (forwarding)
+@_SKIPdocker run --rm --name hi --entrypoint sh hello-img -c "while true; do printf zzz; sleep 5; done"
 docker run --rm --name hi -e HELLO_SLEEP=1 --entrypoint sh hello-img -c "hello fancy-stuff"
-@_SKIP# docker exec hi ps -eaf
-# option 1: use exec
-docker run --rm --name hi -e HELLO_SLEEP=1 --entrypoint sh hello-img -c "exec hello fancy-stuff"
-# case 2: bad pid 1
-docker run --rm --name hi --entrypoint sleep hello-img 10
-# option 2: use tini
-docker run --rm --name hi --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 30
-
-# tini in image
+@_SKIPdocker exec hi ps -eaf
+@_SKIPdocker stop hi
+# options: exec or tini
+@_SKIPdocker run --rm --name hi -e HELLO_SLEEP=1 --entrypoint sh hello-img -c "exec hello fancy-stuff"
+@_SKIP# option 2: tini
+@_SKIPdocker run --rm --name hi --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 30
 bat Dockerfile-4
 
 # layers/caching
@@ -93,10 +96,10 @@ time docker build . -t hello-img -f Dockerfile-5 --no-cache
 sed -i '' 's/Hello/Greetings/g' hello.go
 time docker build . -t hello-img -f Dockerfile-5
 
-# shell launch explained
-cat Dockerfile-5 | grep ^ENTRY
-go run hello.go one and all
-docker run --rm hello-img one and all
+@_SKIP# shell launch explained
+@_SKIPcat Dockerfile-5 | grep ^ENTRY
+@_SKIPgo run hello.go one and all
+@_SKIPdocker run --rm hello-img one and all
 
 # size
 docker images
