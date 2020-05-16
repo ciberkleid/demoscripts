@@ -1,10 +1,10 @@
 apiVersion: build.pivotal.io/v1alpha1
 kind: Image
 metadata:
-  name: cool-app
+  name: hello-java
   namespace: kpack-builds
 spec:
-  tag: ciberkleid/cool-app:kpack-image-demo-latest
+  tag: ciberkleid/hello-java:kpack-image-demo-latest
   serviceAccount: kpack-service-account
   cacheSize: "1.5Gi" # Optional, if not set then the caching feature is disabled
   failedBuildHistoryLimit: 5 # Optional, if not present defaults to 10
@@ -14,7 +14,7 @@ spec:
     kind: ClusterBuilder
   source:   # also supports blob (e.g. jar) and registry (code in an image)
     git:
-      url: https://github.com/ciberkleid/cool-app
+      url: https://github.com/ciberkleid/hello-java
       revision: master
 #    subPath: #A subdirectory within the source folder where application code resides. Can be ignored if the source code resides at the root level.
   build: # Optional

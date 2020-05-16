@@ -2,14 +2,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
         <modelVersion>4.0.0</modelVersion>
 
-        <groupId>com.mycompany.app</groupId>
-        <artifactId>my-app</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <groupId>com.example</groupId>
+        <artifactId>myapp</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <description>Minimal pom file example</description>
 
         <properties>
-                <maven.compiler.source>1.7</maven.compiler.source>
-                <maven.compiler.target>1.7</maven.compiler.target>
-                <fakeProp>some-value</fakeProp>
+                <maven.compiler.source>1.8</maven.compiler.source>
+                <maven.compiler.target>1.8</maven.compiler.target>
         </properties>
 
         <dependencies>

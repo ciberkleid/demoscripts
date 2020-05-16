@@ -1,48 +1,8 @@
 env GODEBUG=schedtrace=1000 hello
 
-ls
-# traditional
-go version
-go install
-@_SKIPls -lrt $GOPATH/pkg/mod/*/* | tail -n1
-@_SKIPls -ltr $GOPATH/bin | tail -n1
-find $GOPATH \( -name "strutil@*" -o -name hello \) -ls
-hello
-hello world
-hello world of wonders
-hello "world of wonders"
-@_SKIP# Talk about expectations of prod: same OS? package installed? binary in PATH?
-@_SKIP# Works on my machine... ¯\_(?)_/¯
-# Works on my machine... \_(?)_/
-
-docker run -e HELLO_SLEEP=1 --name hi --rm --entrypoint hello hello-img there # Ctrl+C OK
-docker run -e HELLO_SLEEP=1 --name hi --rm -d --entrypoint hello hello-img there
-docker exec hi ps -eaf
-# launch with shell
-docker run -e HELLO_SLEEP=1 --name hi --rm --entrypoint sh hello-img -c "hello there" # Ctrl+C Not OK
-# elevate with exec
-docker run -e HELLO_SLEEP=1 --name hi --rm --entrypoint sh hello-img -c "exec hello there" # Ctrl+C OK
-# exec doesn't always work
-docker run --name hi --rm --entrypoint sleep hello-img 15 # Ctrl+C Not OK, even as PID 1
-# use tini
-docker run --name hi --rm --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 15 # Ctrl+C OK
-
-
-
 https://gitlab.com/kalilinux/build-scripts/kali-docker/-/blob/28222a5ee0946c9dacc4b7cb988412a450b53c82/Dockerfile
 https://groups.google.com/a/opencontainers.org/forum/#!topic/dev/qYM84b0vays
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md
-LABEL org.opencontainers.image.version=$VERSION \
-      org.opencontainers.image.title="Kali Linux ($RELEASE_DESCRIPTION release)" \
-      org.opencontainers.image.description="Official Kali Linux docker image for $RELEASE_DESCRIPTION" \
-      org.opencontainers.image.url='https://www.kali.org/' \
-      org.opencontainers.image.authors="Kali Developers <devel@kali.org>"
-
-
-@_SKIPCGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o hello
-@_SKIPGOOS=linux go build hello.go; ls
-
-@_SKIPdu -hs * | sort -h
 
 return
 ----------------
@@ -64,18 +24,6 @@ docker pull adoptopenjdk:11-jre-hotspot
 docker pull adoptopenjdk:11-jdk-hotspot-bionic
 docker pull adoptopenjdk:11-jre-hotspot-bionic
 
-~/workspace/demorunner/temp/dockerfile/cool-app$ docker images
-REPOSITORY               TAG                     IMAGE ID            CREATED             SIZE
-adoptopenjdk             11-jdk-hotspot          601e521725f6        3 weeks ago         423MB
-adoptopenjdk             11-jdk-hotspot-bionic   601e521725f6        3 weeks ago         423MB
-maven                    3.6.3-jdk-11-openj9     d8c1dea02324        4 weeks ago         432MB
-adoptopenjdk             11-jre-hotspot          7394aeeb70de        4 weeks ago         225MB
-adoptopenjdk             11-jre-hotspot-bionic   7394aeeb70de        4 weeks ago         225MB
-openjdk                  8-jre-alpine            f7a292bbb70c        11 months ago       84.9MB
-openjdk                  8-jdk-alpine            a3562aa0b991        11 months ago       105MB
-gcr.io/distroless/java   11                      b198cb1b0f9e        50 years ago        196MB
-
-
 # slim from openjdk doesn't have layers
 # various internet recommendations not to use alpine
 
@@ -83,25 +31,8 @@ gcr.io/distroless/java   11                      b198cb1b0f9e        50 years ag
 # ---------------
 # ARTICLE FROM DAVE SYER
 
-# To poke around an image with sh:
-docker run -ti --entrypoint /bin/sh <image:tag>
-
-# To poke around a container:
-docker run --name mycontainer -ti --entrypoint /bin/sh myorg/myapp
-# or get the name or id from docker ps command
-docker exec -ti mycontainer /bin/sh
-
-
-
 # From: https://codefresh.io/docker-tutorial/java_docker_pipeline/
 # Official Maven Docker images keep Maven’s cache folder outside of the container, exposing it as a Docker data volume, using VOLUME root/.m2 command in the Dockerfile. A Docker data volume is a directory within one or more containers that bypasses the Docker Union File System, in simple words: it’s not part of the Docker image.
-
-#Prep
-docker pull maven:3.6.3-jdk-11
-docker tag maven:3.6.3-jdk-11 maven:latest
-
-# Bad mount:
-docker run -it --rm -w /usr/src/app -v "$PWD":/usr/src/app maven mvn clean install
 
 # Proper mount maven local:
 rm -rf ~/.m2/repository/*
@@ -135,5 +66,3 @@ WORKDIR /app
 
 COPY target/m2 /root/.m2/repository
 ...
-
-

@@ -3,15 +3,22 @@ export DOCKER_BUILDKIT=0
 dclean
 
 # Set up
-git clone git@github.com:ciberkleid/cool-app
-cd cool-app
+git clone git@github.com:ciberkleid/hello-java java-app
+cd java-app
 clear
+
 @_ECHO_ON
-cat ~/.m2/settings.xml | grep -v password
-export IMAGE_PATH=registry.hub.docker.com/ciberkleid/cool-app
-./mvnw compile com.google.cloud.tools:jib-maven-plugin:2.1.0:build -Dimage=$IMAGE_PATH
-open https://hub.docker.com/r/ciberkleid/cool-app/tags
+ls
+./mvnw compile com.google.cloud.tools:jib-maven-plugin:2.1.0:dockerBuild -Dimage=jib-img
 docker images
+
+# publish
+cat ~/.m2/settings.xml | grep -v password
+export IMAGE_PATH=registry.hub.docker.com/ciberkleid/jib-img
+./mvnw compile com.google.cloud.tools:jib-maven-plugin:2.1.0:build -Dimage=$IMAGE_PATH
+open https://hub.docker.com/r/ciberkleid/jib-img/tags
+
+
 cat pom.xml # plugin dependency
 export IMAGE_PATH=registry.hub.docker.com/ciberkleid
 ./mvnw compile jib:build
@@ -24,7 +31,7 @@ cat target/jib-image.id
 cat pom.xml # debug profile config
 ./mvnw package -P jib-debug
 docker images
-docker run -it --entrypoint /busybox/sh debug/cool-app
+docker run -it --entrypoint /busybox/sh debug/jib-img
 ./mvnw clean package -Djib.to.tags.tag=latest
 
 #### Get more examples:

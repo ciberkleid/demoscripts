@@ -2,25 +2,29 @@
 
 setBatLang YAML
 
-@_SKIPecho "### Installing kpack and kpack logs CLI"
-@_SKIPkubectl apply -f https://github.com/pivotal/kpack/releases/download/v0.0.8/release-0.0.8.yaml
-@_SKIPcurl -L https://github.com/pivotal/kpack/releases/download/v0.0.8/logs-v0.0.8-macos.tgz | tar zx && \
-@_SKIP    chmod +x logs && \
-@_SKIP    mv logs ~/opt/logs
-@_SKIPecho "### Finished installing kpack and kpack logs CLI"
+echo "### Installing kpack and kpack logs CLI"
+KPACK_VERSION=0.0.8
+kubectl apply -f https://github.com/pivotal/kpack/releases/download/v${KPACK_VERSION}/release-${KPACK_VERSION}.yaml
+curl -L https://github.com/pivotal/kpack/releases/download/v${KPACK_VERSION}/logs-v${KPACK_VERSION}-macos.tgz | tar zx && \
+    chmod +x logs && \
+    mv logs ~/opt/logs
+echo "### Finished installing kpack and kpack logs CLI"
 
 # Start demo
 @_ECHO_ON
 
 kubectl api-resources --api-group build.pivotal.io
 bat kpack/default-clusterbuilder.yaml
-bat kpack/image-cool-app.yaml
+bat kpack/image-hello-java.yaml
 printf "#" >> bump; git add bump; git commit -m "bump commit id"; git push
 @_ECHO_OFF
 cd ${DEMO_HOME}
 @_ECHO_ON
 kubectl get builds -n kpack-builds
-logs -namespace kpack-builds -image cool-app
+logs -namespace kpack-builds -image hello-java
+kubectl get hello-java
+kubectl describe hello-java
 
+@_ECHO_OFF
 # After an image or a build executes, show status information using: kubectl get <image-name> or kubectl describe <image-name>
 

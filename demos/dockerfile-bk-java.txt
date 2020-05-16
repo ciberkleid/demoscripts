@@ -5,8 +5,8 @@ setBatLang Dockerfile
 
 # Set up java demo
 cd ${DEMO_TEMP}
-if [ ! -d cool-app ]; then git clone git@github.com:ciberkleid/cool-app; fi
-cd cool-app
+if [ ! -d hello-java ]; then git clone git@github.com:ciberkleid/hello-java; fi
+cd hello-java
 # Install dependencies into a repo in the context
 if [ ! -d ./.m2/repository ]; then ./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline; fi
 # Build jar (assume default config is layered)
@@ -17,7 +17,7 @@ if [ ! -d temp-default ]; then mkdir -p temp-default; cd temp-default; jar -xf .
 if [ ! -d temp-layered ]; then mkdir -p temp-layered; cd temp-layered; java -Djarmode=layertools -jar  ../target/*.jar extract; mkdir -p snapshot-dependencies; cd ..; fi
 
 # Set up to start demo
-cd ${DEMO_TEMP}/cool-app
+cd ${DEMO_TEMP}/hello-java
 # Copy Dockerfiles and .dockerignore file
 cp -r Dockerfiles/. .
 clear
@@ -39,26 +39,26 @@ batd Dockerfile-1 Dockerfile-2
 @_SKIPcatd Dockerfile-1 Dockerfile-2
 @_SKIPdiff -u Dockerfile-1 Dockerfile-2 | delta
 export DOCKER_BUILDKIT=1
-docker build . -t cool-app -f Dockerfile-2     # --progress=plain
+docker build . -t hello-java -f Dockerfile-2     # --progress=plain
 sed -i '' 's/starter-actuator/configuration-processor/g' pom.xml; git diff pom.xml
-docker build . -t cool-app -f Dockerfile-2
+docker build . -t hello-java -f Dockerfile-2
 
 @_SKIPclear
 @_SKIP# bind mount
 @_SKIPcatd Dockerfile-2 Dockerfile-2b
 @_SKIP./mvnw -Dmaven.repo.local=./.m2/repository dependency:go-offline
 @_SKIPls ./.m2/repository
-@_SKIPdocker build . -t cool-app -f Dockerfile-2b
+@_SKIPdocker build . -t hello-java -f Dockerfile-2b
 @_SKIPcat Dockerfile-2b.dockerignore
 
 clear
 # java entrypoint
-docker run -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8081
-docker run -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app
+docker run -e "JAVA_OPTS=-Ddebug -Xmx128m" hello-java --server.port=8081
+docker run -e "JAVA_OPTS=-Ddebug -Xmx128m" hello-java
 # JAVA_TOOL_OPTIONS will work
 colordiff Dockerfile-2 Dockerfile-3
-docker build . -t cool-app -f Dockerfile-3
-docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" cool-app --server.port=8081
+docker build . -t hello-java -f Dockerfile-3
+docker run -p 8081:8081 -e "JAVA_OPTS=-Ddebug -Xmx128m" hello-java --server.port=8081
 @_SKIP# http localhost:8081 # In a different window
 @_SKIP# <Ctrl+C> in container process window to stop container
 
@@ -73,11 +73,11 @@ ls -l temp-layered
 @_SKIPhead temp-layered/application/BOOT-INF/layers.idx
 @_SKIPtail temp-layered/application/BOOT-INF/layers.idx
 batd Dockerfile-3 Dockerfile-5
-@_SKIPdocker build . -t cool-app -f Dockerfile-5
-@_SKIPcp demo/CoolAppController-hello.java src/main/java/io/pivotal/coolapp/CoolAppController.java
-@_SKIPdocker build . -t cool-app -f Dockerfile-5
-@_SKIPdocker history cool-app
-@_SKIPdocker run -p 8080:8080 cool-app
+@_SKIPdocker build . -t hello-java -f Dockerfile-5
+@_SKIPcp demo/HelloController.java src/main/java/com/example/hello-java/controller/
+@_SKIPdocker build . -t hello-java -f Dockerfile-5
+@_SKIPdocker history hello-java
+@_SKIPdocker run -p 8080:8080 hello-java
 
 @_SKIP# LABELS ??????? ARGS ??? ENV ???
 

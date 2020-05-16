@@ -1,18 +1,18 @@
 apiVersion: build.pivotal.io/v1alpha1
 kind: Image
 metadata:
-  name: cool-app
+  name: hello-java
   namespace: kpack-builds
 spec:
   tags:
-    - ciberkleid/cool-app:kpack-build-demo-latest
-    - ciberkleid/cool-app:kpack-build-demo
+    - ciberkleid/hello-java:kpack-build-demo-latest
+    - ciberkleid/hello-java:kpack-build-demo
   serviceAccount: kpack-service-account
   builder:
     image: gcr.io/paketo-buildpacks/builder:base-platform-api-0.3
   source:   # also supports blob (e.g. jar) and registry (code in an image)
     git:
-      url: https://github.com/ciberkleid/cool-app
+      url: https://github.com/ciberkleid/hello-java
       revision: master
   #    subPath: #A subdirectory within the source folder where application code resides. Can be ignored if the source code resides at the root level.
   # TODO create the pvc and update the field below

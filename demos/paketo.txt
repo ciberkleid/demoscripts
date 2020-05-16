@@ -2,7 +2,7 @@
 dclean
 
 cd ${DEMO_TEMP}
-if [ ! -d java-app ]; then git clone git@github.com:ciberkleid/cool-app java-app; fi
+if [ ! -d java-app ]; then git clone git@github.com:ciberkleid/hello-java java-app; fi
 cd java-app; ./mvnw dependency:go-offline; cd ..
 
 if [ ! -d go-app ]; then git clone git@github.com:ciberkleid/hello-go.git temp-hello-go; mkdir go-app; mv temp-hello-go/src/* ./go-app/; rm -rf temp-hello-go; fi
@@ -60,10 +60,9 @@ bat pom.xml
 @_SKIP./mvnw spring-boot:build-image -DskipTests
 ./mvnw clean package -DskipTests -P cnb
 @_SKIPdocker images | grep builder
-docker images | grep cool-app
-@_SKIPpack inspect-image cool-app:1.0.0
+docker images | grep hello-java
+@_SKIPpack inspect-image hello-java:1.0.0
 
 @_SKIPdocker run -p 8080:8080 java-img:1.0.0
 @_SKIPmvn spring-boot:build-image -Dspring-boot.build-image.builder=heroku/buildpacks:18 -Dspring-boot.build-image.imageName=java-img:heroku
 @_SKIPmvn spring-boot:build-image -Dspring-boot.build-image.imageName=ciberkleid/java-img
-

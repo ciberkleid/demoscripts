@@ -110,11 +110,13 @@ fi
 echo -e "\nSetting up temp dir [${DEMO_TEMP}]"
 if [ "$(ls -A ${DEMO_TEMP})" ]; then
   echo "Temp dir contents"
-  ls -l "${DEMO_TEMP}"
+  tree "${DEMO_TEMP}"
 fi
 if [ ${force_cleanup_enabled} -eq 1 ]; then
   echo "Forced deletion is enabled. Recreating temp directory."
   rm -rf "${DEMO_TEMP}"
+  echo "Temp dir conents"
+  tree "${DEMO_TEMP}"
 else
   echo "Forced deletion is not enabled. Using existing temp directory."
 fi
