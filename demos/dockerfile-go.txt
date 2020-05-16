@@ -8,7 +8,7 @@ if [ ! -d hello-go ]; then git clone git@github.com:ciberkleid/hello-go; fi
 cd hello-go
 
 echo "echo \"mwahaha!\"; return;"  > big-secret-file; base64 /dev/urandom | head -c 10000 >> big-secret-file
-#cp Dockerfiles/Dockerfile src/
+cp Dockerfiles/Dockerfile src/
 cd src
 # To initialize, run: go mod init example.com/hello; go test
 go clean -x -modcache
@@ -37,13 +37,13 @@ docker run hello-img sunshine
 @_SKIP# Guaranteed: same OS, package installed, binary in PATH
 
 # tagging
-cp ../Dockerfiles/* .
-batd Dockerfile Dockerfile-1
-docker build . -t hello-img:1.6 -t hello-img:1 -t hello-img
+docker tag hello-img hello-img:1.6; docker tag hello-img hello-img:1
 docker images | grep hello
 sed -i '' 's/world/sunshine/g' Dockerfile
 docker build . -t hello-img -t hello-img:1 -t hello-img:1.7
 docker images | grep hello
+cp ../Dockerfiles/* .
+batd Dockerfile Dockerfile-1
 
 clear
 # build context
