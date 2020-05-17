@@ -62,19 +62,19 @@ docker build . -t hello-img | grep Sending
 docker run --rm -it --entrypoint /bin/sh hello-img
 
 # user
-batd Dockerfile-1 Dockerfile-2
+batd Dockerfile Dockerfile-2
 docker build . -t hello-img -f Dockerfile-2
 docker run --rm --entrypoint /bin/sh hello-img -c "id"
 
 @_SKIP ##### KUBEACADEMY - START PART 2
 clear
 
-# app shutdown (OS signals)
+# app shutdown
 bat Dockerfile-2 | grep ENTRY
 docker run --rm -e HELLO_SLEEP=1 hello-img
-# bad listener (trapping)
+# bad listener (trapping OS signals)
 docker run --rm --entrypoint sleep hello-img 10
-# bad communicator (forwarding)
+# bad communicator (forwarding OS signals)
 @_SKIPdocker run --rm --name hi --entrypoint sh hello-img -c "while true; do printf zzz; sleep 5; done"
 docker run --rm --name hi -e HELLO_SLEEP=1 --entrypoint sh hello-img -c "hello fancy-stuff"
 @_SKIPdocker exec hi ps -eaf
