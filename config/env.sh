@@ -132,11 +132,6 @@ alias dclean="docker ps -a -q | xargs -n1 docker stop; docker system prune -af"
 # Remove all containers; prune dangling images; prune images, containers, volumes, and networks with specified label
 alias dclean2="docker ps -a -q | xargs -n1 docker rm -f; docker image prune -f; docker system prune -af --filter label=maintainer=me@example.com"
 
-# Rename Terminal tabs
-tabname() { printf '\e]1;%s\a' $1; }
-
-tabname "${demo_script_handle}"
-
 # Change Terminal prompt to show only a $
 export PS1="\[\033[0m\]\$ "
 
