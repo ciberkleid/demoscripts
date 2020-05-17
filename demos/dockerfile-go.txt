@@ -40,7 +40,7 @@ docker run hello-img sunshine
 docker tag hello-img hello-img:1.6; docker tag hello-img hello-img:1
 docker images | grep hello
 sed -i '' 's/world/sunshine/g' Dockerfile
-docker build . -t hello-img -t hello-img:1 -t hello-img:1.7
+docker build . -t hello-img:1.7 -t hello-img:1 -t hello-img
 docker images | grep hello
 cp ../Dockerfiles/* .
 batd Dockerfile Dockerfile-1
@@ -48,7 +48,7 @@ batd Dockerfile Dockerfile-1
 clear
 # build context
 @_SKIPdu -hs * | sort -h
-docker build . -t hello-img
+docker build . -t hello-img | grep Sending
 docker run --rm -it --entrypoint /bin/sh hello-img -c "pwd; ls -l"
 @_ECHO_OFF
 setBatLang exclude
