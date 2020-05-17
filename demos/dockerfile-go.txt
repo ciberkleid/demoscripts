@@ -7,9 +7,9 @@ setBatLang Dockerfile
 if [ ! -d hello-go ]; then git clone git@github.com:ciberkleid/hello-go; fi
 cd hello-go
 
-echo "echo \"mwahaha!\"; return;"  > big-secret-file; base64 /dev/urandom | head -c 10000 >> big-secret-file
 cp Dockerfiles/Dockerfile src/
 cd src
+echo "echo \"mwahaha!\"; return;" > README.md; base64 /dev/urandom | head -c 10000 >> README.md
 # To initialize, run: go mod init example.com/hello; go test
 go clean -x -modcache
 unset HELLO_ARG
@@ -17,7 +17,7 @@ go run hello.go
 
 # Start demo
 
-@_SKIP ##### KUBEACADEMY - START PART 2
+@_SKIP ##### KUBEACADEMY - START PART 1
 
 clear
 @_ECHO_ON
@@ -47,11 +47,9 @@ batd Dockerfile Dockerfile-1
 
 clear
 # build context
-cp ../big-secret-file .
 @_SKIPdu -hs * | sort -h
 docker build . -t hello-img
-@_SKIP # Reminder: pwd; ls -l; whoami; rm *; ls -l;
-docker run --rm -it --entrypoint /bin/sh hello-img
+docker run --rm -it --entrypoint /bin/sh hello-img -c "pwd; ls -l"
 @_ECHO_OFF
 setBatLang exclude
 @_ECHO_ON
@@ -60,14 +58,15 @@ cp ../Dockerfiles/.dockerignore .; bat .dockerignore
 setBatLang Dockerfile
 @_ECHO_ON
 docker build . -t hello-img | grep Sending
-docker run --rm --entrypoint /bin/sh hello-img -c "ls -l"
+@_SKIP # Reminder: ls -l; whoami; rm *; ls -l;
+docker run --rm --entrypoint /bin/sh hello-img
 
 # user
 batd Dockerfile-1 Dockerfile-2
 docker build . -t hello-img -f Dockerfile-2
-docker run --rm --entrypoint /bin/sh hello-img -c "id; rm -f *"
+docker run --rm --entrypoint /bin/sh hello-img -c "id"
 
-@SKIP ##### KUBEACADEMY - START PART 2
+@_SKIP ##### KUBEACADEMY - START PART 2
 clear
 
 # app shutdown (OS signals)
