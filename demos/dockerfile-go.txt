@@ -102,7 +102,7 @@ time docker build . -t hello-img -f Dockerfile-4
 clear
 # user
 docker run --rm --entrypoint /bin/sh hello-img -c "id"
-batd Dockerfile Dockerfile-5
+batd Dockerfile-4 Dockerfile-5
 docker build . -t hello-img -f Dockerfile-5
 docker run --rm --entrypoint /bin/sh hello-img -c "id"
 
