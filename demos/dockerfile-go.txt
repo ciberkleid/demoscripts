@@ -72,18 +72,16 @@ clear
 # app shutdown
 bat Dockerfile-2 | grep ENTRY
 docker run --rm -e HELLO_SLEEP=1 hello-img
-# bad listener (trapping OS signals)
-docker run --rm --entrypoint sleep hello-img 10
-# bad communicator (forwarding OS signals)
-@_SKIPdocker run --rm --name hi --entrypoint sh hello-img -c "while true; do printf zzz; sleep 5; done"
-docker run --rm --name hi -e HELLO_SLEEP=1 --entrypoint sh hello-img -c "hello fancy-stuff"
+bat Dockerfile-3 | grep ENTRY
+docker build . -t hello-img -f Dockerfile-3
+docker run --rm --name hi -e HELLO_SLEEP=1 hello-img rising stars
 @_SKIPdocker exec hi ps -eaf
 @_SKIPdocker stop hi
-# options: exec or tini
-@_SKIPdocker run --rm --name hi -e HELLO_SLEEP=1 --entrypoint sh hello-img -c "exec hello fancy-stuff"
-@_SKIP# option 2: tini
-@_SKIPdocker run --rm --name hi --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 30
+# option 1: exec
+bat Dockerfile-4-exec | grep ENTRY
+# option 2: tini
 bat Dockerfile-4
+@_SKIPdocker run --rm --name hi --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 30
 
 # layers/caching
 docker images

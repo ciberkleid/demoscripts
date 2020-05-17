@@ -1,3 +1,10 @@
+# bad listener (trapping OS signals)
+docker run --rm --entrypoint sleep hello-img 10
+# bad communicator (forwarding OS signals)
+@_SKIPdocker run --rm --name hi --entrypoint sh hello-img -c "while true; do printf zzz; sleep 5; done"
+docker run --rm --name hi -e HELLO_SLEEP=1 --entrypoint sh hello-img -c "hello fancy-stuff"
+
+
 env GODEBUG=schedtrace=1000 hello
 
 https://gitlab.com/kalilinux/build-scripts/kali-docker/-/blob/28222a5ee0946c9dacc4b7cb988412a450b53c82/Dockerfile
