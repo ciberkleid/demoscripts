@@ -8,6 +8,7 @@ if [ ! -d hello-go ]; then git clone git@github.com:ciberkleid/hello-go; fi
 cd hello-go
 
 cp Dockerfiles/Dockerfile src/
+cp Dockerfiles/Dockerfile-1 src/
 cd src
 echo "echo \"mwahaha!\"; return;" > README.md; base64 /dev/urandom | head -c 10000 >> README.md
 # To initialize, run: go mod init example.com/hello; go test
@@ -42,14 +43,13 @@ docker images | grep hello
 sed -i '' 's/world/sunshine/g' Dockerfile
 docker build . -t hello-img:1.7 -t hello-img:1 -t hello-img
 docker images | grep hello
-cp ../Dockerfiles/* .
 batd Dockerfile Dockerfile-1
 
 clear
 # build context
 @_SKIPdu -hs * | sort -h
 docker build . -t hello-img | grep Sending
-docker run --rm -it --entrypoint /bin/sh hello-img -c "pwd; ls -l"
+docker run --rm -it --entrypoint /bin/sh hello-img
 @_ECHO_OFF
 setBatLang exclude
 @_ECHO_ON
@@ -58,46 +58,55 @@ cp ../Dockerfiles/.dockerignore .; bat .dockerignore
 setBatLang Dockerfile
 @_ECHO_ON
 docker build . -t hello-img | grep Sending
-@_SKIP # Reminder: ls -l; whoami; rm *; ls -l;
-docker run --rm -it --entrypoint /bin/sh hello-img
-
-# user
-batd Dockerfile Dockerfile-2
-docker build . -t hello-img -f Dockerfile-2
-docker run --rm --entrypoint /bin/sh hello-img -c "id"
+docker run --rm --entrypoint /bin/sh hello-img -c "ls -l"
 
 @_SKIP ##### KUBEACADEMY - START PART 2
-clear
 
+@_ECHO_OFF
+cp ../Dockerfiles/* .
+@_ECHO_ON
+clear
 # app shutdown
-bat Dockerfile-2 | grep ENTRY
+bat Dockerfile | grep ENTRY
 docker run --rm -e HELLO_SLEEP=1 hello-img
-bat Dockerfile-3 | grep ENTRY
-docker build . -t hello-img -f Dockerfile-3
+bat Dockerfile-2 | grep ENTRY
+docker build . -t hello-img -f Dockerfile-2
 docker run --rm --name hi -e HELLO_SLEEP=1 hello-img rising stars
-@_SKIPdocker exec hi ps -eaf
+@_SKIPdocker ps
+@_SKIPdocker exec hi ps -ef
 @_SKIPdocker stop hi
 # option 1: exec
-bat Dockerfile-4-exec | grep ENTRY
+bat Dockerfile-3-exec | grep ENTRY
 # option 2: tini
-bat Dockerfile-4
+bat Dockerfile-3
 @_SKIPdocker run --rm --name hi --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 30
 
+clear
 # layers/caching
-docker images
 docker history hello-img
+bat Dockerfile-3
 bat Dockerfile-4
-bat Dockerfile-5
 @_SKIP# Talk about COPY command location, OS package commands, single command for dependencies and source
-time docker build . -t hello-img -f Dockerfile-5 --no-cache
+time docker build . -t hello-img -f Dockerfile-4 --no-cache
 sed -i '' 's/Hello/Greetings/g' hello.go
-time docker build . -t hello-img -f Dockerfile-5
+time docker build . -t hello-img -f Dockerfile-4
 
 @_SKIP# shell launch explained
-@_SKIPcat Dockerfile-5 | grep ^ENTRY
+@_SKIPcat Dockerfile-4 | grep ^ENTRY
 @_SKIPgo run hello.go one and all
 @_SKIPdocker run --rm hello-img one and all
 
+
+@_SKIP ##### KUBEACADEMY - START PART 3
+
+clear
+# user
+docker run --rm --entrypoint /bin/sh hello-img -c "id"
+batd Dockerfile Dockerfile-5
+docker build . -t hello-img -f Dockerfile-5
+docker run --rm --entrypoint /bin/sh hello-img -c "id"
+
+clear
 # size
 docker images
 bat Dockerfile-6
