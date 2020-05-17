@@ -59,7 +59,7 @@ setBatLang Dockerfile
 @_ECHO_ON
 docker build . -t hello-img | grep Sending
 @_SKIP # Reminder: ls -l; whoami; rm *; ls -l;
-docker run --rm --entrypoint /bin/sh hello-img
+docker run --rm -it --entrypoint /bin/sh hello-img
 
 # user
 batd Dockerfile-1 Dockerfile-2
