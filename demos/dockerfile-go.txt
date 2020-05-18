@@ -79,6 +79,7 @@ docker run --rm --name hi -e HELLO_SLEEP=1 hello-img rising stars
 # option 1: exec
 bat Dockerfile-3-exec | grep ENTRY
 # option 2: tini
+# docker run --init -e TINI_KILL_PROCESS_GROUP=1 ...
 bat Dockerfile-3
 @_SKIPdocker run --rm --name hi --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 30
 
