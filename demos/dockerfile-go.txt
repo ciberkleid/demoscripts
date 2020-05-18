@@ -101,7 +101,9 @@ time docker build . -t hello-img -f Dockerfile-4
 @_SKIP ##### KUBEACADEMY - START PART 3
 
 clear
-docker ps -a -q | xargs -n1 docker stop; docker ps -a -q | xargs -n1 docker rm;  docker image prune -f; docker rmi hello-img:1.6; docker rmi hell-img:1.7;  docker rmi hell-img:1
+@_ECHO_OFF
+docker ps -a -q | xargs -n1 docker stop; docker ps -a -q | xargs -n1 docker rm;  docker image prune -f; docker rmi hello-img:1.6; docker rmi hello-img:1.7;  docker rmi hello-img:1
+@_ECHO_ON
 clear
 # user
 docker run --rm --entrypoint /bin/sh hello-img -c "id"
