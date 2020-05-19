@@ -1,0 +1,55 @@
+# Clean up first from previous usage
+docker container stop registry && docker container rm -v registry
+
+# Install a local Docker registry (Docker Desktop does not include one) using the official image for Docker's (the project) registry
+# https://hub.docker.com/_/registry
+docker run -d -p 5000:5000 --name registry registry
+#docker run -d -p 5000:5000 --name registry registry:2      # V2 API, currently same as latest
+# Add "--restart always" to have the registry start when Docker starts
+# Add "-v /mnt/registry:/var/lib/registry" to use local bind mount for storage
+
+# Get an random image to work with from a remote registry
+docker pull alpine
+
+# Tag it and push to the local registry
+docker tag alpine localhost:5000/demos/demo-img
+docker push localhost:5000/demos/demo-img
+
+# Check it out
+# use with API
+http localhost:5000/v2/
+http localhost:5000/v2/_catalog
+http localhost:5000/v2/demos/demo-img/tags/list
+
+# Remove the copies on the local daemon
+docker image remove alpine
+docker image remove localhost:5000/demos/demo-img
+
+docker images
+
+# Pull the image from the local registry to the local daemon
+docker pull localhost:5000/demos/demo-img
+
+docker images
+
+# Clean up
+
+# Stop the local registry
+docker container stop registry
+
+# Optionally, remove the container
+docker container rm -v registry
+
+return
+
+######
+# Idea:
+# Have a bind mount per demo??
+# Maybe not... Ben Hale said "Ooof.  Don't use this one.  Pays the same performance penalty storing the images across the host volume mount boundary." with regards to:
+#           docker run -d -p 5000:5000 --restart=always -e REGISTRY_STORAGE_DELETE_ENABLED=true -v registry-volume:/var/lib/registry --name registry registry:2
+#           source: https://gist.github.com/dmikusa-pivotal/67eb684ea3d3606cee6db5995ba4c4e3
+
+registry-id=demo1
+local-registry=~/workspace/docker-registries/${registry-id}/registry
+docker container stop registry
+docker run -d -p 5000:5000 --name registry -v ${local-registry}:/var/lib/registry registry

@@ -1,0 +1,146 @@
+@_ECHO_OFF
+dclean
+
+# Clone git repos (sample apps and sample buildpack)
+cd ${DEMO_TEMP}
+if [ ! -d java-app ]; then git clone git@github.com:ciberkleid/hello-java java-app; fi
+cd java-app; ./mvnw dependency:go-offline; cd ..
+
+if [ ! -d go-app ]; then git clone git@github.com:ciberkleid/hello-go.git temp-hello-go; mkdir go-app; mv temp-hello-go/src/* ./go-app/; rm -rf temp-hello-go; fi
+unset HELLO_ARG
+
+@_SKIPif [ ! -d node-app ]; then git clone git@github.com:paketo-buildpacks/samples.git paketo-samples; mkdir node-app; mv paketo-samples/demo-apps/app-source/* ./node-ap=p/; rm -rf paketo-samples; fi
+
+if [ ! -d sample-buildpack ]; then git clone git@github.com:buildpacks/samples.git cnb-samples; echo -e "\n[[stacks]]\nid = \"io.buildpacks.stacks.bionic\"" >> cnb-samples/buildpacks/hello-world/buildpack.toml; mkdir sample-buildpack; mv cnb-samples/buildpacks/hello-world/* ./sample-buildpack/; rm -rf cnb-samples; fi
+
+# Install a local Docker registry (Docker Desktop does not include one) using the official image for Docker's (the project) registry
+# https://hub.docker.com/_/registry
+# Clean up first
+docker container stop registry && docker container rm -v registry
+docker run -d -p 5000:5000 --name registry registry
+#docker run -d -p 5000:5000 --name registry registry:2      # V2 API, currently same as latest
+
+
+# Pull images from remote registries
+docker pull gcr.io/paketo-buildpacks/builder:base
+docker pull gcr.io/paketo-buildpacks/run:base-cnb
+docker pull gcr.io/paketo-buildpacks/run:0.0.15-base-cnb
+
+# Pre-populate the local registry
+docker tag gcr.io/paketo-buildpacks/builder:base localhost:5000/builder:base
+docker push localhost:5000/builder:base
+docker tag gcr.io/paketo-buildpacks/run:base-cnb localhost:5000/run:base-cnb
+docker push localhost:5000/run:base-cnb
+docker tag gcr.io/paketo-buildpacks/run:0.0.15-base-cnb localhost:5000/run:0.0.15-base-cnb
+docker push localhost:5000/run:0.0.15-base-cnb
+
+# Check that they are there
+http localhost:5000/v2/_catalog
+http localhost:5000/v2/builder/tags/list
+http localhost:5000/v2/run/tags/list
+
+# Remove images from local daemon
+# docker rmi gcr.io/paketo-buildpacks/builder:base  # Don't remove the default builder!!
+docker rmi gcr.io/paketo-buildpacks/run:base-cnb
+docker rmi gcr.io/paketo-buildpacks/run:0.0.15-base-cnb
+docker rmi localhost:5000/builder:base
+docker rmi localhost:5000/run:base-cnb
+docker rmi localhost:5000/run:0.0.15-base-cnb
+
+# Check that they are gone from the local daemon but still saved in the local registry
+docker images
+http localhost:5000/v2/_catalog
+
+# Use pack to build app
+# --no-pull: Skip pulling builder and run images before use
+pack build localhost:5000/go-img --path go-app --no-pull --publish
+
+# It's not in the local daemon
+docker images
+# But it is on the local registry
+http localhost:5000/v2/_catalog
+http localhost:5000/v2/go-img/tags/list
+
+# Pull it to run it
+docker pull localhost:5000/go-img
+docker run --rm localhost:5000/go-img
+
+# Test it out
+#   Note: need to specify full launch command as a single string
+#   The CNB launcher is occupying the entrypoint
+#   Can't provide more than one argument at the command line, so wrap as single string
+docker run --rm localhost:5000/go-img "hello world"
+
+# Update the OS (rebase)
+time pack rebase localhost:5000/go-img --run-image localhost:5000/run:0.0.15-base-cnb --no-pull --publish
+
+# Rebase back
+time pack rebase localhost:5000/go-img --run-image localhost:5000/run:base-cnb --no-pull --publish
+
+#### BEN'S DEMO
+
+
+time pack rebase localhost:5000/${APPLICATION} --no-pull --publish
+
+docker pull localhost:5000/${APPLICATION}
+
+docker run --publish 8080:8080 localhost:5000/${APPLICATION}
+
+#### END BEN'S DEMO
+
+
+docker pull gcr.io/paketo-buildpacks/builder:base
+docker pull gcr.io/paketo-buildpacks/run:base-cnb
+docker pull gcr.io/paketo-buildpacks/run:0.0.15-base-cnb
+
+@_SKIPpack build node-img -p node-app
+pack build go-img -p go-app
+pack build java-img -p java-app
+pack rebase go-img --run-image gcr.io/paketo-buildpacks/run:base-cnb
+
+# Start demo
+clear
+@_ECHO_ON
+@_SKIPpack --help
+@_SKIPpack build --help
+ls
+@_SKIPpack suggest-builders
+
+pack set-default-builder gcr.io/paketo-buildpacks/builder:base
+pack inspect-builder gcr.io/paketo-buildpacks/builder:base
+clear
+
+@_SKIPpack build node-img -p node-app
+pack build go-img -p go-app
+pack build java-img -p java-app
+
+clear
+docker images | grep "\-img"
+# rebase
+pack rebase go-img --run-image gcr.io/paketo-buildpacks/run:0.0.15-base-cnb
+docker images | grep go-img
+
+# user
+docker run --entrypoint /bin/sh go-img -c id
+
+# bom
+pack inspect-image java-img --bom | jq
+@_SKIPpack inspect-image java-img --bom | jq '.local[] | select(.name == "jre")'
+@_SKIPpack inspect-image java-img --bom | jq '.local[] | select(.name == "dependencies")'
+
+# bp
+ls -l sample-buildpack/*
+pack build java-img -p java-app -b from=builder -b sample-buildpack
+
+# Spring Boot
+cd java-app
+bat pom.xml
+@_SKIP./mvnw spring-boot:build-image -DskipTests
+./mvnw clean package -DskipTests -P cnb
+@_SKIPdocker images | grep builder
+docker images | grep hello-java
+@_SKIPpack inspect-image hello-java:1.0.0
+
+@_SKIPdocker run -p 8080:8080 java-img:1.0.0
+@_SKIPmvn spring-boot:build-image -Dspring-boot.build-image.builder=heroku/buildpacks:18 -Dspring-boot.build-image.imageName=java-img:heroku
+@_SKIPmvn spring-boot:build-image -Dspring-boot.build-image.imageName=ciberkleid/java-img

@@ -9,6 +9,106 @@ clear
 
 @_ECHO_ON
 ls
+# Build and generate tar file
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:buildTar
+docker load --input target/jib-image.tar
+cp demo/HelloController.java src/main/java/com/example/hellojava/controller/
+# Load again - show that only one layer is uploaded (application classes layer - very small)
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:buildTar
+docker load --input target/jib-image.tar
+# Change the version of Spring Boot (3 layers update - dependencies layer is much bigger)
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:buildTar
+docker load --input target/jib-image.tar
+
+# Build and publish to localhost:5000
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:build -Dimage=localhost:5000/hello-java-jib -Djib.allowInsecureRegistries=true
+http localhost:5000/v2/_catalog
+http localhost:5000/v2/hello-java-jib/tags/list
+
+# Build and publish to Docker Hub
+cat ~/.m2/settings.xml | grep -v password
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:build -Dimage=registry.hub.docker.com/ciberkleid/hello-java-jib
+# Check DOcker Hub to confirm image is there
+# Change source and re-build:
+cp demo/HelloController.java src/main/java/com/example/hellojava/controller/
+# Second build will be fast - only uploads changed layer (application classes layer only)
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:build -Dimage=registry.hub.docker.com/ciberkleid/hello-java-jib
+
+# dive to explore layers
+
+# reproducible builds
+dclean
+docker images
+mvn clean
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:buildTar
+docker load --input target/jib-image.tar
+docker tag hello-java:0.0.1-SNAPSHOT hello-java:buildTar
+docker rmi hello-java:0.0.1-SNAPSHOT
+
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:dockerBuild -Dimage=hello-java:dockerBuild
+
+docker run -d -p 5000:5000 --name registry registry
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:build -Dimage=localhost:5000/hello-java:build  -Djib.allowInsecureRegistries=true
+docker pull localhost:5000/hello-java:build
+
+docker images | grep hello
+mvn compile com.google.cloud.tools:jib-maven-plugin:2.2.0:dockerBuild -Dimage=hello-java:debug -Dfrom.image=gcr.io/distroless/java:11-debug
+
+# Layers
+docker history hello-java:dockerBuild
+dive hello-java:dockerBuild
+
+# Shell for debugging
+# configure pom.xml with debug base image
+            <plugin>
+              <groupId>com.google.cloud.tools</groupId>
+              <artifactId>jib-maven-plugin</artifactId>
+              <version>2.2.0</version>
+              <configuration>
+                <to>
+                    <image>hello-java:debug</image>
+                </to>
+                <from>
+                    <image>gcr.io/distroless/java:11-debug</image>
+                </from>
+              </configuration>
+            </plugin>
+mvn compile jib:dockerBuild
+docker run --rm -it --entrypoint /busybox/sh hello-java:debug
+
+# Config and User -- use debug image created above
+mvn compile jib:dockerBuild
+docker run --rm --entrypoint /busybox/sh hello-java:debug -c "id"
+# get root
+# configure pom.xml with debug base image
+            <plugin>
+              <groupId>com.google.cloud.tools</groupId>
+              <artifactId>jib-maven-plugin</artifactId>
+              <version>2.2.0</version>
+              <configuration>
+                <to>
+                  <image>hello-java:debug</image>
+                </to>
+                <from>
+                  <image>gcr.io/distroless/java:11-debug</image>
+                </from>
+                <container>
+                  <labels>
+                    <maintainer>me@example.com</maintainer>
+                  </labels>
+                  <user>1001</user>
+                </container>
+              </configuration>
+            </plugin>
+mvn compile jib:dockerBuild
+docker run --rm --entrypoint /busybox/sh hello-java:debug -c "id"
+# get uid=1001 gid=0(root)
+# get change 1001 to nonroot
+mvn compile jib:dockerBuild
+docker run --rm --entrypoint /busybox/sh hello-java:debug -c "id"
+# uid=65532(nonroot) gid=65532(nonroot)
+
+---
 ./mvnw compile com.google.cloud.tools:jib-maven-plugin:2.1.0:dockerBuild -Dimage=jib-img
 docker images
 

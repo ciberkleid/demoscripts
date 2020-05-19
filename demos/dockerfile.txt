@@ -43,7 +43,7 @@ docker images | grep hello
 sed -i '' 's/world/sunshine/g' Dockerfile
 docker build . -t hello-img:1.7 -t hello-img:1 -t hello-img
 docker images | grep hello
-batd Dockerfile Dockerfile-1
+bat Dockerfile-1
 
 clear
 # build context
