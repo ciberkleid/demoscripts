@@ -61,7 +61,7 @@ pack build java-img -p java-app -b from=builder -b sample-buildpack
 cd java-app
 bat pom.xml
 @_SKIP./mvnw spring-boot:build-image -DskipTests
-./mvnw clean package -DskipTests -P cnb
+./mvnw clean package -DskipTests -P pk
 @_SKIPdocker images | grep builder
 docker images | grep hello-java
 @_SKIPpack inspect-image hello-java:1.0.0
