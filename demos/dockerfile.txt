@@ -103,7 +103,13 @@ time docker build . -t hello-img -f Dockerfile-4
 
 clear
 @_ECHO_OFF
-docker ps -a -q | xargs -n1 docker stop; docker ps -a -q | xargs -n1 docker rm;  docker image prune -f; docker rmi hello-img:1.6; docker rmi hello-img:1.7;  docker rmi hello-img:1
+# silent cleanup
+docker ps -a -q | xargs -n1 docker rm -f > /dev/null 2>&1
+docker image prune -f > /dev/null 2>&1
+docker rmi hello-img:1.6 > /dev/null 2>&1
+docker rmi hello-img:1.7 > /dev/null 2>&1
+docker rmi hello-img:1 > /dev/null 2>&1
+
 @_ECHO_ON
 clear
 # user
