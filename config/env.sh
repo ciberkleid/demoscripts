@@ -45,26 +45,13 @@ do
     esac
 done
 
-echo -e "\n\n##### SETTING UP DEMO ["${demo_script}"] [$(date)] #####"
+echo -e "\n\n##### SETTING UP DEMO [${demo_script}] [${demo_files}] [$(date)] #####"
 
 # brew install coreutils (for greadlink)
 demo_script_absolute_path=$(greadlink -f "${demo_script}")
 demo_script_handle=$(echo $(basename "${demo_script}") | cut -d. -f1)
 if [[ "${demo_files}" != "" ]]; then
   demo_files_absolute_path=$(greadlink -f "${demo_files}")
-else
-  demo_files_absolute_path=""
-fi
-
-# demo_files is optional; set absolute path to "" if demo_files was not provided
-if [ $# -gt 1 ]; then
-  if [ ! -d "${2}" ]; then
-    echo "Directory does not exist: [${2}]"
-    kill -INT $$
-  else
-    demo_files="${2}"
-
-  fi
 else
   demo_files_absolute_path=""
 fi
