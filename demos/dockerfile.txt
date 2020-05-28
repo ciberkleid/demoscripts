@@ -125,3 +125,22 @@ bat Dockerfile-6
 docker build . -t hello-img -f Dockerfile-6
 docker images
 docker run --rm hello-img "dockerfile ninjas"
+
+clear
+# inspect
+docker inspect hello-img | more
+
+# make it pretty
+docker inspect hello-img | jq
+
+# format templating
+docker inspect hello-img -f '{{json .}}' | jq keys
+docker inspect hello-img -f '{{json .Config}}' | jq
+
+# inspect with dive
+dive hello-img
+@_SKIP TAB, TAB, TAB, Ctrl+C
+docker images
+dive
+
+
