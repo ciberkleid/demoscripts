@@ -77,16 +77,17 @@ export SAVED_DEMO_DELAY=${DEMO_DELAY}
 # https://github.com/sharkdp/bat
 #brew install bat
 
-echo -e "\nSetting up bat utility"
-mkdir -p "$(bat --config-dir)/themes"
-cp config/bat/themes/*.tmTheme "$(bat --config-dir)/themes"
-bat cache --build
-
-export BAT_STYLE=grid
-#export BAT_STYLE=plain
-#export BAT_STYLE=numbers
-export BAT_PAGER=""
-#export BAT_PAGER="never"
+if [[ $(which bat) != "" ]]; then
+  echo -e "\nSetting up bat utility"
+  mkdir -p "$(bat --config-dir)/themes"
+  cp config/bat/themes/*.tmTheme "$(bat --config-dir)/themes"
+  bat cache --build
+  export BAT_STYLE=grid
+  #export BAT_STYLE=plain
+  #export BAT_STYLE=numbers
+  export BAT_PAGER=""
+  #export BAT_PAGER="never"
+fi
 
 if [ -z ${COLORFGBG} ]; then
   # Background is white
@@ -173,11 +174,12 @@ echo "DEMO_FILES=${DEMO_FILES}"
 echo "DEMO_DELAY=${DEMO_DELAY}"
 echo "SAVED_DEMO_DELAY=${SAVED_DEMO_DELAY}"
 echo "DEMO_COLOR=${DEMO_COLOR}"
-echo "BAT_STYLE=${BAT_STYLE}"
-echo "BAT_PAGER=${BAT_PAGER}"
-echo "BAT_THEME=${BAT_THEME}"
-echo "BAT_LANG=${BAT_LANG}   # to change, use: setBatLang <language>"
-
+if [[ $(which bat) != "" ]]; then
+  echo "BAT_STYLE=${BAT_STYLE}"
+  echo "BAT_PAGER=${BAT_PAGER}"
+  echo "BAT_THEME=${BAT_THEME}"
+  echo "BAT_LANG=${BAT_LANG}   # to change, use: setBatLang <language>"
+fi
 echo -e "\nFinished setting up environment"
 
 #####  PROVIDE COMMAND FOR STARTING DEMO SCRIPT
