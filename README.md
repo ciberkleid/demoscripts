@@ -1,6 +1,6 @@
 # demoscripts
 
-## Setup:
+## Setup
 
 1. Set up the demorunner utility
 
