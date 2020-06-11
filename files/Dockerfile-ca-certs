@@ -1,3 +1,0 @@
-golang:
-FROM alpine instead of FROM busybox and then run apk add --update ca-certificates
-
