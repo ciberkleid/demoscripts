@@ -54,7 +54,27 @@ To run a demo script, execute the following command:
    
    To start your demo at an arbitrary line in your script, change the 1 to the appropriate line number.
       
-   
+
+## Dependencies
+
+The `run.sh` assumes you have the following utilities installed:
+
+Required:
+- coreutils (for greadlink)
+
+Optional*:
+- [bat](https://github.com/sharkdp/bat)
+- [colordiff](https://www.colordiff.org)
+
+ .* Some of the aliases created in `run.sh` use `bat` and `colordiff`. The utilities are only required if you plan to use these utilities of the aliases in your scripts. If you are going to use the demo scripts included in this repo, then you will need these utilities.
+
+On Mac OS, you can install the above utilities using:
+```
+brew install coreutils
+brew install bat
+brew install colordiff
+```
+
 
    
 -----
