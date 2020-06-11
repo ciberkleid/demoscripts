@@ -1,0 +1,7 @@
+FROM node
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        tini=0.18* \
+    && rm -rf /var/lib/apt/lists/*
+COPY . .
+RUN npm install
+CMD ["tini", "-g", "--", "node", "server.js"]
