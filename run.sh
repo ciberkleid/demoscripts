@@ -1,18 +1,22 @@
 # Usage example:
-# source setup.sh demos/dockerfile-1.txt files/dockerfile
-# source demorunner.sh demos/dockerfile-1.txt
+# source run.sh demos/dockerfile-1.txt files/dockerfile -f
+# OR
+# source run.sh demos/dockerfile-1.txt files/dockerfile -f -m
+# source demorunner.sh demos/dockerfile-1.txt 1
 
 # Default values of arguments
 demo_script=""
 demo_files=""
 force_cleanup_enabled=0
+run_demorunner_enabled=1
 
 # Check number of arguments
-if [ "$#" -gt 3 ]; then
+if [ "$#" -gt 4 ]; then
     echo "Illegal number of arguments"
     echo "Usage:"
-    echo "source setup.sh <script_file> <files_dir> [-f]"
-    echo "Note: -f is optional and forces deletion and recreation of demo temp directory"
+    echo "source setup.sh <script_file> <files_dir> [-f] [-m]"
+    echo "Notes: -f forces deletion and recreation of demo temp directory"
+    echo "       -m disables calling demorunner automatically"
     kill -INT $$
 fi
 
@@ -24,7 +28,11 @@ do
     case $arg in
         -f|--force)
         force_cleanup_enabled=1
-        shift # Remove --initialize from processing
+        shift # Remove from processing
+        ;;
+        -m|--manual)
+        run_demorunner_enabled=0
+        shift
         ;;
         *)
         if [[ "${demo_script}" == "" ]]; then
@@ -182,3 +190,11 @@ echo
 echo "Expanded form:"
 echo "cd ${DEMO_TEMP}; source demorunner.sh ${DEMO_SCRIPT} 1; cd ${DEMO_HOME}"
 echo
+
+##### RUN AUTOMATICALLY
+if [ ${run_demorunner_enabled} -eq 1 ]; then
+  echo -e "\nExecuting demorunner.sh...\n"
+  cd "${DEMO_TEMP}"
+  source demorunner.sh "${DEMO_SCRIPT}" 1
+  cd "${DEMO_HOME}"
+fi
