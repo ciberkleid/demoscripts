@@ -60,7 +60,7 @@ To run a demo script, execute the following command:
 The `run.sh` assumes you have the following utilities installed:
 
 Required:
-- coreutils (for greadlink)
+- [coreutils](https://www.gnu.org/software/coreutils/) (for greadlink)
 
 Optional*:
 - [bat](https://github.com/sharkdp/bat)
