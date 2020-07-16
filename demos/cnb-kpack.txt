@@ -1,4 +1,4 @@
-@_ECHO_OFF
+#_ECHO_OFF
 setBatLang YAML
 
 echo "### Installing kpack and kpack logs CLI"
@@ -22,29 +22,29 @@ kubectl apply -f kpack/image.yaml
 
 # Start demo
 clear
-@_ECHO_ON
-# kpack resources
+#_ECHO_ON
+#_ECHO_# kpack resources
 kubectl api-resources --api-group build.pivotal.io
 
-# config
+#_ECHO_# config
 bat kpack/builder.yaml
 bat kpack/image.yaml
 
-# trigger build
+#_ECHO_# trigger build
 printf "#" >> bump; git add bump; git commit -m "bump commit id"; git push
 
 open https://hub.docker.com/repository/docker/ciberkleid/hello-go
 
 kubectl describe image hello-go | more
 
-# reason for build
+#_ECHO_# reason for build
 LAST_BUILD=$(kubectl describe image hello-go | grep "Latest Build Ref" | sed 's/.* //')
 kubectl get build $LAST_BUILD -o json | jq .metadata.annotations
 
-# build log
+#_ECHO_# build log
 logs -namespace kpack-builds -image hello-go
 
-#kubectl get builds
-#kubectl get image hello-go
+#_ECHO_#kubectl get builds
+#_ECHO_#kubectl get image hello-go
 
 

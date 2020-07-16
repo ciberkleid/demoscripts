@@ -1,0 +1,87 @@
+#_ECHO_OFF
+
+# Check which process is on port 8080:
+lsof -i :8080 | grep LISTEN
+
+dclean
+docker volume prune -f
+
+docker pull gcr.io/paketo-buildpacks/builder:base-platform-api-0.3
+docker pull paketobuildpacks/run:base-cnb
+docker pull buildpacksio/lifecycle:0.8.1
+pack set-default-builder gcr.io/paketo-buildpacks/builder:base-platform-api-0.3
+
+cd ${DEMO_TEMP}
+if [ ! -d buildpack-samples ]; then git clone https://github.com/buildpacks/samples.git buildpack-samples; fi
+if [ ! -d go-demo-app ]; then git clone git@github.com:springone-tour-2020-cicd/go-demo-app.git; fi
+if [ ! -d java-app ]; then git clone git@github.com:ciberkleid/hello-java java-app; fi
+
+cd ${DEMO_TEMP}java-app
+rm -rf demo
+rm -rf Dockerfiles
+rm -rf kpack
+rm -rf bump
+rm -rf manifest.yml
+rm HELP.md
+./mvnw dependency:go-offline
+
+cd ${DEMO_TEMP}/go-demo-app
+pack build go-demo-app --no-pull
+
+clear
+#_ECHO_ON
+
+##_ECHO_# Sample app
+ls
+#go run hello-server.go 2>&1 > /dev/null &
+#curl localhost:8080
+#pkill hello-server && wait $!
+
+#clear
+#_ECHO_# Dockerfile (docker build -f Dockerfile ...)
+bat Dockerfile
+
+#_ECHO_# Buildpacks (tool + lifecycle + buildpacks)
+pack set-default-builder gcr.io/paketo-buildpacks/builder:base-platform-api-0.3
+pack build go-demo-app --no-pull
+docker images
+
+# Custom buildpacks
+pack build go-demo-app --buildpack from=builder --buildpack ../buildpack-samples/buildpacks/hello-world
+
+clear
+#_ECHO_# Transparency
+pack inspect-image go-demo-app
+#pack inspect-image go-demo-app --bom | jq
+pack inspect-builder
+
+clear
+#_ECHO_# OS patching
+docker pull gcr.io/paketo-buildpacks/run:0.0.24-base-cnb
+docker tag gcr.io/paketo-buildpacks/run:0.0.24-base-cnb paketobuildpacks/run:base-cnb
+docker images
+pack rebase go-demo-app --no-pull
+catd <(docker inspect ff0bc5ced021) <(docker inspect go-demo-app) | tail -n20
+
+clear
+
+#_ECHO_OFF
+docker tag go-demo-app ciberkleid/go-demo-app:pack-1.0.0
+#_ECHO_ON
+#_ECHO_# Publish
+pack build ciberkleid/go-demo-app:pack-1.0.0 --no-pull --publish
+
+#_ECHO_# Spring Boot
+ls
+./mvnw spring-boot:build-image -DskipTests
+#docker images | grep "builder\|java"
+#pack inspect-image hello-java:1.0.0 --bom | jq '.local[] | select(.name == "jre")'
+pack inspect-image hello-java:1.0.0 --bom | jq '.local[].name' -r
+pack inspect-image hello-java:1.0.0 --bom | jq '.local[] | select(.name == "dependencies")'
+
+#mvn spring-boot:build-image -Dspring-boot.build-image.imageName=ciberkleid/hello-java:1.0.0
+#mvn spring-boot:build-image -Dspring-boot.build-image.builder=heroku/buildpacks:18 -Dspring-boot.build-image.imageName=hello-java:1.0.0:heroku
+
+#_ECHO_# Configuration (Paketo Java BP)
+#./mvnw spring-boot:build-image -DskipTests
+#-e BP_DEBUG_ENABLED=true

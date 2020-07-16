@@ -1,4 +1,4 @@
-@_ECHO_OFF
+#_ECHO_OFF
 export DOCKER_BUILDKIT=0
 dclean
 setBatLang Dockerfile
@@ -18,26 +18,26 @@ go run hello.go
 
 # Start demo
 
-@_SKIP ##### KUBEACADEMY - START PART 1
+# ##### KUBEACADEMY - START PART 1
 
 clear
-@_ECHO_ON
+#_ECHO_ON
 
-# sample app
+#_ECHO_# sample app
 tree
 go run hello.go
 go run hello.go world
 
-# first build / app startup
+#_ECHO_# first build / app startup
 bat Dockerfile
 docker build . -t hello-img
 clear
 docker images
 docker run hello-img
 docker run hello-img sunshine
-@_SKIP# Guaranteed: same OS, package installed, binary in PATH
+## Guaranteed: same OS, package installed, binary in PATH
 
-# tagging
+#_ECHO_# tagging
 docker tag hello-img hello-img:1.6; docker tag hello-img hello-img:1
 docker images | grep hello
 sed -i '' 's/world/sunshine/g' Dockerfile
@@ -46,63 +46,63 @@ docker images | grep hello
 bat Dockerfile-1
 
 clear
-# build context
-@_SKIPdu -hs * | sort -h
+#_ECHO_# build context
+#du -hs * | sort -h
 docker build . -t hello-img | grep Sending
 docker run --rm -it --entrypoint /bin/sh hello-img
-@_ECHO_OFF
+#_ECHO_OFF
 setBatLang exclude
-@_ECHO_ON
+#_ECHO_ON
 cp ../Dockerfiles/.dockerignore .; bat .dockerignore
-@_ECHO_OFF
+#_ECHO_OFF
 setBatLang Dockerfile
-@_ECHO_ON
+#_ECHO_ON
 docker build . -t hello-img | grep Sending
 docker run --rm --entrypoint /bin/sh hello-img -c "ls -l"
 
-@_SKIP ##### KUBEACADEMY - START PART 2
+# ##### KUBEACADEMY - START PART 2
 
-@_ECHO_OFF
+#_ECHO_OFF
 cp ../Dockerfiles/* .
-@_ECHO_ON
+#_ECHO_ON
 
 clear
-# app shutdown
+#_ECHO_# app shutdown
 bat Dockerfile | grep ENTRY
 docker run --rm -e HELLO_SLEEP=1 hello-img
 bat Dockerfile-2 | grep ENTRY
 docker build . -t hello-img -f Dockerfile-2
 docker run --rm --name hi -e HELLO_SLEEP=1 hello-img rising stars
-@_SKIPdocker ps
-@_SKIPdocker exec hi ps -ef
-@_SKIPdocker stop hi
-# option 1: exec
+#docker ps
+#docker exec hi ps -ef
+#docker stop hi
+#_ECHO_# option 1: exec
 bat Dockerfile-3-exec | grep ENTRY
-# option 2: tini
-# docker run --init -e TINI_KILL_PROCESS_GROUP=1 ...
+#_ECHO_# option 2: tini
+#_ECHO_# docker run --init -e TINI_KILL_PROCESS_GROUP=1 ...
 bat Dockerfile-3
-@_SKIPdocker run --rm --name hi --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 30
+#docker run --rm --name hi --init -e TINI_KILL_PROCESS_GROUP=1 --entrypoint sleep hello-img 30
 
 clear
-# layers/caching
+#_ECHO_# layers/caching
 docker history hello-img
 bat Dockerfile-3
 bat Dockerfile-4
-@_SKIP# Talk about COPY command location, OS package commands, single command for dependencies and source
+## Talk about COPY command location, OS package commands, single command for dependencies and source
 time docker build . -t hello-img -f Dockerfile-4 --no-cache
 sed -i '' 's/Hello/Greetings/g' hello.go
 time docker build . -t hello-img -f Dockerfile-4
 
-@_SKIP# shell launch explained
-@_SKIPcat Dockerfile-4 | grep ^ENTRY
-@_SKIPgo run hello.go one and all
-@_SKIPdocker run --rm hello-img one and all
+## shell launch explained
+#cat Dockerfile-4 | grep ^ENTRY
+#go run hello.go one and all
+#docker run --rm hello-img one and all
 
 
-@_SKIP ##### KUBEACADEMY - START PART 3
+# ##### KUBEACADEMY - START PART 3
 
 clear
-@_ECHO_OFF
+#_ECHO_OFF
 # silent cleanup
 docker ps -a -q | xargs -n1 docker rm -f > /dev/null 2>&1
 docker image prune -f > /dev/null 2>&1
@@ -110,16 +110,16 @@ docker rmi hello-img:1.6 > /dev/null 2>&1
 docker rmi hello-img:1.7 > /dev/null 2>&1
 docker rmi hello-img:1 > /dev/null 2>&1
 
-@_ECHO_ON
+#_ECHO_ON
 clear
-# user
+#_ECHO_# user
 docker run --rm --entrypoint /bin/sh hello-img -c "id"
 batd Dockerfile-4 Dockerfile-5
 docker build . -t hello-img -f Dockerfile-5
 docker run --rm --entrypoint /bin/sh hello-img -c "id"
 
 clear
-# size
+#_ECHO_# size
 docker images
 bat Dockerfile-6
 docker build . -t hello-img -f Dockerfile-6
@@ -139,7 +139,7 @@ docker inspect hello-img -f '{{json .Config}}' | jq
 
 # inspect with dive
 dive hello-img
-@_SKIP TAB, TAB, TAB, Ctrl+C
+# TAB, TAB, TAB, Ctrl+C
 docker images
 dive
 
