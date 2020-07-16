@@ -1,8 +1,8 @@
 # Usage example:
-# source run.sh demos/dockerfile-1.txt files/dockerfile -f
+# source run.sh demos/dockerfile.txt files/dockerfile -f
 # OR
-# source run.sh demos/dockerfile-1.txt files/dockerfile -f -m
-# source demorunner.sh demos/dockerfile-1.txt 1
+# source run.sh demos/dockerfile.txt files/dockerfile -f -m
+# source demorunner.sh demos/dockerfile.txt 1
 
 # Default values of arguments
 demo_script=""
@@ -14,7 +14,7 @@ run_demorunner_enabled=1
 if [ "$#" -gt 4 ]; then
     echo "Illegal number of arguments"
     echo "Usage:"
-    echo "source setup.sh <script_file> <files_dir> [-f] [-m]"
+    echo "source run.sh <script_file> <files_dir> [-f] [-m]"
     echo "Notes: -f forces deletion and recreation of demo temp directory"
     echo "       -m disables calling demorunner automatically"
     kill -INT $$
