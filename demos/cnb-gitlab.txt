@@ -1,0 +1,108 @@
+#_ECHO_OFF
+DEMO_DELAY=10
+
+#dclean
+docker ps -a -q | xargs -n1 docker stop; docker system prune -af
+docker volume prune -f
+
+docker pull gcr.io/paketo-buildpacks/builder:base-platform-api-0.3
+docker pull paketobuildpacks/run:base-cnb
+docker pull buildpacksio/lifecycle:0.8.1
+pack set-default-builder gcr.io/paketo-buildpacks/builder:base-platform-api-0.3
+
+cd ${DEMO_TEMP}
+if [ ! -d buildpack-samples ]; then git clone https://github.com/buildpacks/samples.git buildpack-samples; fi
+if [ ! -d go-demo-app ]; then git clone git@github.com:springone-tour-2020-cicd/go-demo-app.git go-demo-app; fi
+#if [ ! -d java-demo-app ]; then git clone git@github.com:ciberkleid/hello-java java-demo-app; fi
+if [ ! -d echo-service ]; then git clone git@gitlab.com:andreasevers/echo-service.git echo-service; fi
+
+#cd ${DEMO_TEMP}/java-demo-app
+#rm -rf demo
+#rm -rf Dockerfiles
+#rm -rf kpack
+#rm -rf bump
+#rm -rf manifest.yml
+#rm HELP.md
+#./mvnw dependency:go-offline
+
+cd ${DEMO_TEMP}/go-demo-app
+./mvnw dependency:go-offline
+
+cd ${DEMO_TEMP}/go-demo-app
+rm README.md
+pack build go-demo-img --no-pull
+
+clear
+#_ECHO_ON
+
+##_ECHO_# Sample app
+ls
+#go run hello-server.go 2>&1 > /dev/null &
+#curl localhost:8080
+#pkill hello-server && wait $!
+
+#clear
+#_ECHO_# Dockerfile (docker build -t my-img)
+bat Dockerfile
+
+#_ECHO_# Buildpacks (platform + lifecycle + base images + buildpacks)
+pack set-default-builder gcr.io/paketo-buildpacks/builder:base-platform-api-0.3
+pack build go-demo-img --no-pull
+docker images
+
+#_ECHO_# Buildpacks in GitLab Auto DevOps
+
+## START GITLAB MANUAL DEMO 1:
+# Open https://gitlab.com/andreasevers/echo-service
+# Go to CI/CD Pipelines, click Run Pipeline
+# Show log - show that log is similar to pack demo (detection of bps, phases)
+# Point of Paketo for Java highlights: Java memory calculator, env variable for config, the URLs to the GitHub repos and docs, ... ???)
+# Show line saying image final name
+# Show configuration in PROJECT SETTINGS (env vars) - CNB enable and Paketo var settings
+# Show https://gitlab.com/gitlab-org/cluster-integration/auto-build-image/-/blob/master/src/build.sh#L20
+
+# Config demo in GitLab
+# Start new run with env vars:
+# AUTO_DEVOPS_BUILD_IMAGE_FORWARDED_CI_VARIABLES=BP_JAVA_VERSION="14.*"
+
+# Custom builpdack in GitLab
+# Start new run with env vars:
+# BUILDPACK_URL=https://github.com/ciberkleid/buildpack-samples-hello-world/archive/master.tar.gz
+
+pack build sample-image --builder gcr.io/paketo-buildpacks/builder:base-platform-api-0.3 --buildpack from=builder --buildpack https://github.com/ciberkleid/buildpack-samples-hello-world/archive/master.tar.gz
+
+## END GITLAB MANUAL DEMO 1
+
+
+# AUTO_DEVOPS_BUILD_IMAGE_FORWARDED_CI_VARIABLES=1
+
+# Configuration (env vars or buildpack.yaml)
+
+# Custom buildpacks
+ls ../buildpack-samples/buildpacks/hello-world/*
+pack build go-demo-img --no-pull --buildpack from=builder --buildpack ../buildpack-samples/buildpacks/hello-world
+
+
+clear
+#_ECHO_# Transparency
+#_ECHO_OFF
+IMG=registry.gitlab.com/andreasevers/echo-service/master:latest
+#_ECHO_ON
+echo $IMG
+docker pull $IMG
+pack inspect-image $IMG
+#pack inspect-image $IMG --bom | jq '.local[].name' -r
+pack inspect-image $IMG --bom | jq '.local[] | select(.name == "jre")'
+pack inspect-image $IMG --bom | jq '.local[] | select(.name == "dependencies")'
+
+pack inspect-builder
+
+clear
+#_ECHO_# OS patching
+docker pull paketobuildpacks/run:0.0.48-base-cnb
+docker tag paketobuildpacks/run:0.0.48-base-cnb paketobuildpacks/run:base-cnb
+docker images | grep run
+docker images | grep gitlab
+#pack rebase $IMG --publish --no-pull
+pack rebase $IMG --no-pull
+catd <(docker inspect 44c8c90486e0) <(docker inspect $IMG) | tail -n20
