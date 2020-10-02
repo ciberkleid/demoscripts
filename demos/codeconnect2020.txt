@@ -22,10 +22,12 @@ done
 # Prep local copy of base image to make subsequent builds faster
 time docker pull ubuntu:16.04
 time echo -e "FROM ubuntu:16.04\nRUN apt-get update -y && apt-get install -y python-pip python-dev" | docker build . -t ubuntu:16.04 -f -
-
+#docker tag ubuntu:16.04 localhost:5000/warden:v1
+#docker push localhost:5000/warden:v1
 
 echo "Opening reference pages in browser"
 open https://docs.google.com/presentation/d/1H5MuC_dUCga43qtci91bNAEDtE6v9aaAoHfKiJuS55w
+open https://docs.google.com/presentation/d/1H5MuC_dUCga43qtci91bNAEDtE6v9aaAoHfKiJuS55w/edit#slide=id.g99412d29dd_0_354
 open https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers
 open https://github.com/kubernetes/api
 
@@ -44,12 +46,12 @@ git clone $demo
 cd warden; ls
 
 # Show certgen.sh
-mkdir certs
-./certgen.sh
+mkdir certs; ./certgen.sh
 ls certs
 
 clear
 bat Dockerfile
+cp ${DEMO_FILES}/.dockerignore .; bat .dockerignore
 docker build . -t localhost:5000/warden:v1
 docker push localhost:5000/warden:v1
 
@@ -74,18 +76,18 @@ k apply -f test1.yaml --dry-run=server
 k get pods
 k apply -f test1.yaml
 k get pods
+clear
 bat test2.yaml
 k apply -f test2.yaml
 bat test3.yaml
 k apply -f test3.yaml
 
-clear
-# Mutating example
-cd ..
 k delete validatingwebhookconfigurations validating-webhook
 k delete pod warden -n validation
 k delete pod test1
 
+cd ..; clear
+#_ECHO_# Mutating example
 #diff $DEMO_FILES/warden.py app/warden.py
 cp $DEMO_FILES/warden.py app/
 cp $DEMO_FILES/requirements.txt .
@@ -98,6 +100,7 @@ k apply -f warden-k8s.yaml
 vi webhook.yaml
 k apply -f webhook.yaml
 
+clear
 k apply -f test-pods/
 k describe pod test1
 
