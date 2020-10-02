@@ -1,0 +1,107 @@
+#_ECHO_OFF
+
+cd ${DEMO_TEMP}
+
+#if [ ! -d admission-controller-webhook-demo ]; then git clone git@github.com:stackrox/admission-controller-webhook-demo.git; fi
+#cd admission-controller-webhook-demo
+
+demo=https://github.com/theithollow/warden
+
+rm -rf warden
+kind delete cluster
+dclean
+
+# Reference for kind to access local docker registry:
+# https://kind.sigs.k8s.io/docs/user/local-registry/
+docker run -d -p 5000:5000 --name registry registry:2
+time kind create cluster --config ~/.kind/kind-with-reg.yaml
+docker network connect "kind" "registry"
+for node in $(kind get nodes); do
+  kubectl annotate node "${node}" "kind.x-k8s.io/registry=localhost:5000";
+done
+# Prep local copy of base image to make subsequent builds faster
+time docker pull ubuntu:16.04
+time echo -e "FROM ubuntu:16.04\nRUN apt-get update -y && apt-get install -y python-pip python-dev" | docker build . -t ubuntu:16.04 -f -
+
+
+echo "Opening reference pages in browser"
+open https://docs.google.com/presentation/d/1H5MuC_dUCga43qtci91bNAEDtE6v9aaAoHfKiJuS55w
+open https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers
+open https://github.com/kubernetes/api
+
+clear
+#_ECHO_ON
+#_ECHO_# 1. Enable plugins on cluster
+bat ~/.kind/kind.yaml
+# k api-versions | grep -i admission
+# Check for admissionregistration.k8s.io/v1
+
+clear
+#_ECHO_# 2. Create custom webhook
+echo $demo
+open $demo
+git clone $demo
+cd warden; ls
+
+# Show certgen.sh
+mkdir certs
+./certgen.sh
+ls certs
+
+clear
+bat Dockerfile
+docker build . -t localhost:5000/warden:v1
+docker push localhost:5000/warden:v1
+
+bat warden-k8s.yaml
+sed -i '' 's/theithollow/localhost:5000/' warden-k8s.yaml
+k apply -f warden-k8s.yaml
+
+clear
+#_ECHO_# 3. Register webhook
+bat webhook.yaml
+cat certs/ca.crt | base64
+vi webhook.yaml
+
+k apply -f webhook.yaml
+
+clear
+#_ECHO_# 4. Test
+k get all -n validation
+cd test-pods
+bat test1.yaml
+k apply -f test1.yaml --dry-run=server
+k get pods
+k apply -f test1.yaml
+k get pods
+bat test2.yaml
+k apply -f test2.yaml
+bat test3.yaml
+k apply -f test3.yaml
+
+clear
+# Mutating example
+cd ..
+k delete validatingwebhookconfigurations validating-webhook
+k delete pod warden -n validation
+k delete pod test1
+
+#diff $DEMO_FILES/warden.py app/warden.py
+cp $DEMO_FILES/warden.py app/
+cp $DEMO_FILES/requirements.txt .
+bat app/warden.py
+docker build . -t localhost:5000/warden:v1
+docker push localhost:5000/warden:v1
+
+k apply -f warden-k8s.yaml
+
+vi webhook.yaml
+k apply -f webhook.yaml
+
+k apply -f test-pods/
+k describe pod test1
+
+#_ECHO_OFF
+#k delete -f webhook.yaml
+#k delete -f warden-k8s.yaml
+#k delete ns validation

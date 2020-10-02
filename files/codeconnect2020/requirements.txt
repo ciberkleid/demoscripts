@@ -1,0 +1,6 @@
+Flask==0.12.4
+jsonify
+Werkzeug==0.16.1
+
+jsonpatch==1.26
+jsonpointer==2.0
